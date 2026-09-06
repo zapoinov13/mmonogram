@@ -329,7 +329,7 @@ const ConfiguratorPage = () => {
       { id: "kit" as const, label: t("config.kit"), value: KIT_PACKAGES[config.kitPackage].name, icon: Package },
       { id: "carbon" as const, label: t("config.carbon"), value: config.carbon ? t("config.carbonOn") : t("config.carbonOff"), icon: Gem },
       ...(canOpen
-        ? [{ id: "openings" as const, label: "Openings", value: [config.doors && "Doors", config.hood && "Hood", config.trunk && "Trunk"].filter(Boolean).join(" · ") || "Closed", icon: DoorOpen }]
+        ? [{ id: "openings" as const, label: t("config.openings"), value: [config.doors && t("config.doors"), config.hood && t("config.hood"), config.trunk && t("config.trunk")].filter(Boolean).join(" · ") || t("config.closed"), icon: DoorOpen }]
         : []),
       { id: "lights" as const, label: t("config.lights"), value: config.lights ? t("config.lightsOn") : t("config.lightsOff"), icon: Lightbulb },
       { id: "env" as const, label: t("config.environment"), value: config.night ? t("config.envNight") : t("config.envStudio"), icon: SunMoon },
@@ -349,7 +349,7 @@ const ConfiguratorPage = () => {
     { label: t("config.environment"), value: config.night ? t("config.envNight") : t("config.envStudio") },
     { label: t("config.interior"), value: INTERIOR_FINISHES[config.interior].name },
     ...(canOpen
-      ? [{ label: "Openings", value: [config.doors && "4 doors", config.hood && "hood", config.trunk && "trunk"].filter(Boolean).join(" · ") || "closed" }]
+      ? [{ label: t("config.openings"), value: [config.doors && t("config.doors"), config.hood && t("config.hood"), config.trunk && t("config.trunk")].filter(Boolean).join(" · ") || t("config.closed") }]
       : []),
   ];
 
@@ -414,7 +414,7 @@ const ConfiguratorPage = () => {
           preview:
             index === 0 ? <Car className="h-8 w-8" strokeWidth={1.4} /> : <Sparkles className="h-8 w-8" strokeWidth={1.4} />,
           title: pack.name,
-          subtitle: index === 0 ? "Without body kit" : "M Monogram body kit",
+          subtitle: index === 0 ? t("config.kitWithout") : t("config.kitWith"),
         }));
 
       case "carbon":
