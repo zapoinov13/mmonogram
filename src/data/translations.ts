@@ -75,6 +75,7 @@ export const translations: Record<Language, any> = {
       closed: 'Closed',
       kitWithout: 'Without body kit',
       kitWith: 'M Monogram body kit',
+      closeMenu: 'Close menu',
     },
     hero: {
       title: 'M-Monogram',
@@ -449,6 +450,7 @@ export const translations: Record<Language, any> = {
       closed: 'Закрыто',
       kitWithout: 'Без обвеса',
       kitWith: 'Обвес M Monogram',
+      closeMenu: 'Закрыть меню',
     },
     hero: {
       title: 'M-Monogram',
@@ -823,6 +825,7 @@ export const translations: Record<Language, any> = {
       closed: 'مغلق',
       kitWithout: 'بدون طقم هيكل',
       kitWith: 'طقم هيكل M Monogram',
+      closeMenu: 'إغلاق القائمة',
     },
     hero: {
       title: 'M-Monogram',
