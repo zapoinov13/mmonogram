@@ -78,7 +78,7 @@ const Picture = memo(function Picture({
     />
   );
 
-  const match = src.match(BUILT);
+  const match = import.meta.env.PROD ? src.match(BUILT) : null;
   if (!match) return img;
 
   const base = match[1];

@@ -7,7 +7,7 @@ import g3BlackRear from "@/assets/g3-black-07.jpg";
 import g3BlackSide from "@/assets/g3-black-03.jpg";
 import g3GoldCover from "@/assets/g-3.jpg";
 import g3GoldFront from "@/assets/g3-iconic-gold-front.jpg";
-import greyCover from "@/assets/g3-grey-cover.jpg";
+import greyCover from "@/assets/iconic-silver-g1.jpg";
 import greyStudio from "@/assets/g3-grey-studio.jpg";
 import greyRear from "@/assets/g3-grey-rear.jpg";
 import greyDetail from "@/assets/g3-grey-detail.jpg";
@@ -167,9 +167,9 @@ export const projects: Project[] = [
     duration: "12 weeks",
     package: "Ultra-Limited",
     category: "G-Class",
-    coverImage: g3GoldCover,
+    coverImage: g3Black,
     isHub: true,
-    images: [{ src: g3GoldCover, title: "Gold edition" }],
+    images: [{ src: g3Black, title: "Black Package" }],
     description: "An ultra-limited G-Class transformation in three exclusive packages — Black, Gold and Silver.",
     modifications: [
       "M Monogram exterior identity package",
