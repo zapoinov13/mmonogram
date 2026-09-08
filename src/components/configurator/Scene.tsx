@@ -5,7 +5,8 @@ import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO } from "
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import CarModel from "./CarModel";
-import { CABIN_FLOOR_Y, CABIN_FRONT_X, CABIN_LEN, CABIN_MID_X, CABIN_REAR_X, CABIN_ROOF_Y, CABIN_SIDE_Z } from "./cabin";
+import { CABIN_MID_X, CABIN_ROOF_Y } from "./cabin";
+import { anchorCabinCamera } from "./cabinCamera";
 import Showroom from "./Showroom";
 import { BuildConfig, isInteriorFocus, type CameraFocus } from "./config";
 
@@ -34,7 +35,7 @@ interface CameraPreset {
 /* Базовый и «салонный» угол обзора: в кабине нужен широкоугольник */
 const BASE_FOV = 38;
 const BASE_FOV_MOBILE = 54;
-const INTERIOR_FOV_MOBILE = 68;
+const INTERIOR_FOV_MOBILE = 92;
 
 const PRESETS: Record<CameraFocus, { desktop: CameraPreset; mobile: CameraPreset }> = {
   default: {
@@ -76,7 +77,7 @@ const PRESETS: Record<CameraFocus, { desktop: CameraPreset; mobile: CameraPreset
      углу — я принял её за артефакт прореживания и полдня искал обломок,
      которого там не было. */
   interiorFront: {
-    desktop: { eye: [-1.28, 1.44, 0], target: [0.52, 1.12, 0.05], fov: 60 },
+    desktop: { eye: [-0.65, 1.48, 0], target: [0.62, 1.15, 0], fov: 68 },
     mobile: { eye: [-0.78, 1.42, 0.01], target: [0.52, 1.12, 0.05], fov: INTERIOR_FOV_MOBILE },
   },
   /* С места водителя: точка глаза чуть впереди подголовника, взгляд поверх
@@ -96,7 +97,7 @@ const PRESETS: Record<CameraFocus, { desktop: CameraPreset; mobile: CameraPreset
   /* Из прохода между передними креслами назад на диван */
   interiorRear: {
     desktop: { eye: [0.2, 1.43, 0], target: [-1.45, 1.14, 0], fov: 60 },
-    mobile: { eye: [-0.24, 1.42, 0], target: [-1.45, 1.14, 0], fov: INTERIOR_FOV_MOBILE },
+    mobile: { eye: [0.35, 1.43, 0], target: [-1.3, 1.1, 0], fov: INTERIOR_FOV_MOBILE },
   },
 };
 
@@ -169,6 +170,7 @@ function CameraRig({
   controlsRef,
   flightRef,
   ready,
+  reducedMotion,
 }: {
   focus: CameraFocus;
   isMobile: boolean;
@@ -176,6 +178,7 @@ function CameraRig({
   flightRef: React.MutableRefObject<FlightState | null>;
   /** Машина собрана и стоит в кадре. */
   ready: boolean;
+  reducedMotion: boolean;
 }) {
   const { camera, invalidate } = useThree();
   const introDone = useRef(false);
@@ -192,6 +195,18 @@ function CameraRig({
     const toTarget = new THREE.Vector3(...preset.target);
     const cam = camera as THREE.PerspectiveCamera;
     const toFov = preset.fov ?? (isMobile ? BASE_FOV_MOBILE : BASE_FOV);
+
+    if (reducedMotion) {
+      introDone.current = true;
+      flightRef.current = null;
+      camera.position.copy(toPos);
+      controls?.target.copy(toTarget);
+      cam.fov = toFov;
+      cam.updateProjectionMatrix();
+      controls?.update();
+      invalidate();
+      return;
+    }
 
     if (!introDone.current) {
       /* Интро — аккуратный наезд: камера стоит чуть дальше, выше и левее и
@@ -230,7 +245,7 @@ function CameraRig({
     }
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focus, isMobile, ready]);
+  }, [focus, isMobile, ready, reducedMotion]);
 
   useFrame(() => {
     const flight = flightRef.current;
@@ -267,11 +282,13 @@ function ConfineCamera({
   controlsRef,
   interior,
   flightRef,
+  seat,
 }: {
   night: boolean;
   controlsRef: React.RefObject<OrbitControlsImpl>;
   interior: boolean;
   flightRef: React.MutableRefObject<FlightState | null>;
+  seat: THREE.Vector3 | null;
 }) {
   const { camera } = useThree();
   useFrame(() => {
@@ -295,7 +312,7 @@ function ConfineCamera({
     controls.minDistance = minDist;
     controls.maxDistance = maxDist;
     if (interior) {
-      // в салоне ограничения зала не нужны — крутим вокруг точки внутри кабины
+      if (seat) anchorCabinCamera(camera.position, controls.target, seat);
       controls.minPolarAngle = 0.35;
       controls.maxPolarAngle = Math.PI - 0.35;
       return;
@@ -451,6 +468,10 @@ export default function ConfiguratorScene({
   }, [onReady]);
   const safeFocus = PRESETS[focus] ? focus : "default";
   const interior = isInteriorFocus(safeFocus);
+  const seat = useMemo(() => {
+    const eye = PRESETS[safeFocus][isMobile ? "mobile" : "desktop"].eye;
+    return eye ? new THREE.Vector3(...eye) : null;
+  }, [safeFocus, isMobile]);
   const controls = useRef<OrbitControlsImpl>(null);
   const flightRef = useRef<FlightState | null>(null);
   const bg = config.night ? "#08090a" : "#111315";
@@ -460,36 +481,9 @@ export default function ConfiguratorScene({
     <Canvas
       shadows={!isMobile}
       frameloop="demand"
-      /*
-       * Плотность пикселей холста.
-       *
-       * Было [1, 1.15] на телефоне и [1, 1.5] на десктопе — и это оказалось
-       * главной причиной «всё в пикселях». На айфоне экран просит 1170x2532,
-       * а сцена рисовалась в 448x970: пятнадцать процентов нужных пикселей,
-       * которые браузер потом растягивал в два с половиной раза. Ступеньки по
-       * краю крыши, решётке и аркам — это не модель, это апскейл.
-       *
-       * Потолок 2 — не «побольше на всякий случай», а предел видимого: выше
-       * двух глаз разницы уже не берёт, а память и заливка растут квадратично.
-       * Платить за это можно спокойно: frameloop="demand" рисует кадры только
-       * во время вращения, в покое видеокарта простаивает.
-       */
       dpr={[1, 2]}
       performance={{ min: 0.7 }}
       gl={{
-        /*
-         * Сглаживание нужно обоим, а не только десктопу.
-         *
-         * На телефоне оно было выключено вовсе — вместе с обрезанным dpr это и
-         * давало рваный край. У мобильных видеокарт отрисовка идёт по тайлам, и
-         * MSAA разрешается прямо в тайловой памяти, не доходя до основной, —
-         * то есть стоит заметно дешевле, чем те же пиксели, взятые плотностью.
-         *
-         * На десктопе флаг всё равно ни на что не влияет: когда включён
-         * EffectComposer, сцена уходит в его собственный буфер (см. multisampling
-         * ниже), а этот относится только к холсту. Оставляем true ради случая,
-         * когда пост-обработки нет: в салоне и при prefers-reduced-motion.
-         */
         antialias: true,
         alpha: false,
         stencil: false,
@@ -503,8 +497,8 @@ export default function ConfiguratorScene({
       <color attach="background" args={[bg]} />
 
       <InvalidateOnConfig config={config} />
-      <ConfineCamera night={config.night} controlsRef={controls} interior={interior} flightRef={flightRef} />
-      <CameraRig focus={safeFocus} isMobile={isMobile} controlsRef={controls} flightRef={flightRef} ready={carReady} />
+      <ConfineCamera night={config.night} controlsRef={controls} interior={interior} flightRef={flightRef} seat={seat} />
+      <CameraRig focus={safeFocus} isMobile={isMobile} controlsRef={controls} flightRef={flightRef} ready={carReady} reducedMotion={reducedMotion} />
 
       <Suspense fallback={null}>
         <SceneEnvironment night={config.night} isMobile={isMobile} />
@@ -542,27 +536,6 @@ export default function ConfiguratorScene({
           color="#fff1e4"
         />
 
-        {/* Пол, моторный щит и задняя стенка: у модели салона их нет, и камера
-            изнутри смотрит сквозь торпедо на колёса и пружины подвески.
-            Только в интерьерном режиме — снаружи эти плоскости торчали бы
-            сквозь кузов, что и случилось в первой версии. */}
-        {interior && (
-          <group>
-            <mesh position={[CABIN_MID_X, CABIN_FLOOR_Y - 0.28, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[CABIN_LEN, CABIN_SIDE_Z * 1.7]} />
-              <meshStandardMaterial color="#0b0a0a" roughness={0.95} metalness={0} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[CABIN_FRONT_X + 0.1, CABIN_FLOOR_Y + 0.05, 0]} rotation={[0, Math.PI / 2, 0]}>
-              <planeGeometry args={[CABIN_SIDE_Z * 1.7, 0.9]} />
-              <meshStandardMaterial color="#0b0a0a" roughness={0.95} metalness={0} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[CABIN_REAR_X + 0.05, CABIN_FLOOR_Y + 0.15, 0]} rotation={[0, Math.PI / 2, 0]}>
-              <planeGeometry args={[CABIN_SIDE_Z * 1.7, 1.1]} />
-              <meshStandardMaterial color="#0b0a0a" roughness={0.95} metalness={0} side={THREE.DoubleSide} />
-            </mesh>
-          </group>
-        )}
-
         <Showroom
           key={config.night ? "night" : "day"}
           night={config.night}
@@ -579,12 +552,7 @@ export default function ConfiguratorScene({
 
         {/* «Дорогая картинка» по пресету MANSORY — Quality: SAO в стыках,
             аккуратный bloom только на бликах, лёгкая студийная десатурация.
-            На телефоне блока нет вовсе (см. enablePostEffects). */}
-        {/* multisampling — единственное сглаживание, которое реально работает
-            на десктопе: EffectComposer рисует сцену в свой буфер, минуя
-            antialias холста. Стояло 2 при умолчании библиотеки 8 — три градации
-            на кромку, чего на косых линиях крыши и спицах не хватало. Берём 4:
-            вдвое мягче кромка, и это дешевле, чем добирать то же плотностью. */}
+            На мобильных AO в половинном разрешении (ТЗ 6.9). */}
         {enablePostEffects && <EffectComposer multisampling={4}>
           {/* В салоне радиус AO меньше: с «уличными» 0.5 м вся кабина попадает
               в затенение и уходит в чёрное. */}
@@ -593,11 +561,6 @@ export default function ConfiguratorScene({
             intensity={interior ? 1.35 : 2.8}
             distanceFalloff={1}
             quality={isMobile ? "medium" : "high"}
-            /* Затенение — картинка низкой частоты: мягкие пятна в стыках, без
-               мелких деталей. В половинном разрешении оно на глаз такое же, а
-               считается вчетверо дешевле — этим и оплачен подъём dpr до 2.
-               При dpr 2 половина от него это всё ещё честный логический
-               размер кадра, то есть больше, чем AO считалось раньше. */
             halfRes
           />
           <Bloom intensity={0.11} luminanceThreshold={1.05} luminanceSmoothing={0.25} mipmapBlur />
@@ -609,6 +572,7 @@ export default function ConfiguratorScene({
       <OrbitControls
         ref={controls}
         enablePan={false}
+        enableZoom={!interior}
         target={[0, isMobile ? 1.0 : 0.9, 0]}
         enableDamping
         dampingFactor={0.08}

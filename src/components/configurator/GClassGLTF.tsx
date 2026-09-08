@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CARS, DEFAULT_CAR, DRACO_PATH, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -13,6 +13,7 @@ import {
   isDebris,
   type Fit,
 } from "./fitModel";
+import CabinDetails from "./CabinDetails";
 
 /**
  * Оцифрованная сборка G63 вместо процедурной заглушки.
@@ -59,6 +60,8 @@ function Parts({
   visible = true,
   hideBox,
   onGround,
+  onLoaded,
+  hideWheels = false,
 }: {
   url: string;
   fit?: Fit;
@@ -70,6 +73,8 @@ function Parts({
   hideBox?: THREE.Box3;
   /** Нижняя точка файла после посадки — по ней выставляется уровень пола. */
   onGround?: (url: string, minY: number) => void;
+  onLoaded?: () => void;
+  hideWheels?: boolean;
 }) {
   const { scene } = useGLTF(url, DRACO_PATH);
 
@@ -99,6 +104,11 @@ function Parts({
       mesh.receiveShadow = true;
 
       if (sourceMaterials) return;
+
+      if (hideWheels && MESH_RULES.some((rule) => rule.role === "wheel" && rule.test.test(mesh.name))) {
+        mesh.visible = false;
+        return;
+      }
 
       const box = new THREE.Box3().setFromObject(mesh);
       if (isDebris(mesh, box)) {
@@ -134,11 +144,12 @@ function Parts({
     }
 
     return { root, byRole, fit, minY: new THREE.Box3().setFromObject(root).min.y };
-  }, [scene, shared, kind, url, sourceMaterials, hideBox]);
+  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels]);
 
   useLayoutEffect(() => {
     onGround?.(url, prepared.minY);
-  }, [url, prepared, onGround]);
+    onLoaded?.();
+  }, [url, prepared, onGround, onLoaded]);
 
   useLayoutEffect(() => {
     if (sourceMaterials) return;
@@ -183,9 +194,13 @@ export default function GClassGLTF({
   const files = useMemo(() => carFiles(car), [car]);
   const body = useGLTF(files.body, DRACO_PATH);
   const fit = useMemo(() => computeFit(body.scene.clone(true), car.length), [body.scene, car.length]);
+  const [steeringReady, setSteeringReady] = useState(false);
+  const [kitReady, setKitReady] = useState(false);
+  const reportKitReady = useCallback(() => setKitReady(true), []);
+  const reportSteeringReady = useCallback(() => setSteeringReady(true), []);
   const interiorSteeringMask = useMemo(
-    () => (files.interior && files.steering ? fitSourceBox(STEERING_WHEEL_SOURCE_BOX, fit) : undefined),
-    [files.interior, files.steering, fit],
+    () => (steeringReady && files.interior && files.steering ? fitSourceBox(STEERING_WHEEL_SOURCE_BOX, fit) : undefined),
+    [steeringReady, files.interior, files.steering, fit],
   );
 
   const debugRoles = useMemo(
@@ -211,8 +226,9 @@ export default function GClassGLTF({
         color: paint.color,
         metalness: paint.metalness,
         roughness: paint.roughness,
-        clearcoat: 1,
-        clearcoatRoughness: 0.05,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.18,
+        envMapIntensity: 0.7,
       }),
       // Поле диска у G63 Iconic глянцево-чёрное, отделкой красятся спицы
       wheel: new THREE.MeshPhysicalMaterial({
@@ -229,13 +245,13 @@ export default function GClassGLTF({
       }),
       tire: new THREE.MeshStandardMaterial({ color: "#2a2d31", metalness: 0, roughness: 0.9 }),
       glass: new THREE.MeshPhysicalMaterial({
-        color: "#10151a",
-        metalness: 0.25,
-        roughness: 0.05,
-        transmission: 0.75,
-        thickness: 0.05,
+        color: "#c6d0d2",
+        metalness: 0,
+        roughness: 0.08,
+        transmission: 0,
         transparent: true,
-        opacity: 0.5,
+        opacity: interiorVisible ? 0.12 : 0.24,
+        depthWrite: false,
         side: THREE.DoubleSide,
       }),
       taillight: new THREE.MeshStandardMaterial({
@@ -289,12 +305,14 @@ export default function GClassGLTF({
          Clearcoat не возвращаю: лаковый слой зеркалит окружение белым
          бликом поверх базы, а кожа лаком не покрыта. */
       cabinLeather: new THREE.MeshStandardMaterial({
+        side: THREE.DoubleSide,
         color: interior.primary,
         metalness: 0,
         roughness: 0.78,
         envMapIntensity: 0.12,
       }),
       cabinAccent: new THREE.MeshStandardMaterial({
+        side: THREE.DoubleSide,
         color: interior.accent,
         metalness: 0,
         // Матовая кожа: при меньшей шероховатости плафоны кладут широкий
@@ -305,6 +323,7 @@ export default function GClassGLTF({
       /* Накладки передней панели — рояльный лак. Салону нужен хоть один
          зеркальный материал: рядом с ним кожа читается как кожа. */
       cabinTrim: new THREE.MeshStandardMaterial({
+        side: THREE.DoubleSide,
         color: "#0b0b0c",
         metalness: 0.5,
         roughness: 0.14,
@@ -313,6 +332,7 @@ export default function GClassGLTF({
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
       cabinMetal: new THREE.MeshStandardMaterial({
+        side: THREE.DoubleSide,
         color: grille.color,
         metalness: 1,
         roughness: Math.max(grille.roughness, 0.3),
@@ -321,7 +341,7 @@ export default function GClassGLTF({
       cabinFloor: new THREE.MeshStandardMaterial({ color: "#0e0c0c", metalness: 0, roughness: 0.96, envMapIntensity: 0.05 }),
       cabinRoof: new THREE.MeshStandardMaterial({ color: "#141312", metalness: 0, roughness: 0.9, envMapIntensity: 0.05 }),
     };
-  }, [debugRoles, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
+  }, [debugRoles, interiorVisible, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
 
   useLayoutEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
@@ -338,22 +358,7 @@ export default function GClassGLTF({
     }, 0);
   }, []);
 
-  /*
-   * Салон грузится не сразу, но и не по открытию дверей.
-   *
-   * Стёкла у машины прозрачные: с обычного, наружного ракурса сквозь них
-   * видны кресла и подголовники. Пока салона нет, за стеклом чернота — машина
-   * выглядит пустой скорлупой, и это первое, что видит посетитель.
-   *
-   * При этом тянуть его в один заход с кузовом и обвесом незачем: 2.5 МБ на
-   * критическом пути отодвигают момент, когда машину уже можно крутить.
-   * Поэтому ждём, пока приедет обвес (о загрузке он сообщает замером пола), и
-   * только потом подключаем салон — своим Suspense, без блокировки. В кадре
-   * это выглядит так: машина появилась и вращается, через секунду за стеклом
-   * проступил салон.
-   *
-   * В интерьерных ракурсах ждать нечего — там салон и есть содержимое кадра.
-   */
+  // Load the exterior first unless the current view is already inside the cabin.
   const exteriorLoaded = !files.kit || !config.kit || grounds[files.kit] !== undefined;
   const showInterior = interiorVisible || exteriorLoaded;
 
@@ -375,12 +380,16 @@ export default function GClassGLTF({
 
   return (
     <group position-y={groundOffset}>
+      <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
+        <CabinDetails night={config.night} interior={config.interior} />
+      </group>
       <Parts
         url={files.body}
         fit={fit}
         kind="exterior"
         materials={materials}
         sourceMaterials={car.sourceMaterials}
+        hideWheels={config.kit && kitReady}
         onGround={reportGround}
       />
 
@@ -396,6 +405,7 @@ export default function GClassGLTF({
               kind="exterior"
               materials={materials}
               onGround={reportGround}
+              onLoaded={reportKitReady}
             />
           </Suspense>
         </OptionalBoundary>
@@ -418,7 +428,7 @@ export default function GClassGLTF({
       {showInterior && files.steering && (
         <OptionalBoundary label="руль">
           <Suspense fallback={null}>
-            <Parts url={files.steering} fit={fit} kind="interior" materials={materials} />
+            <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} />
           </Suspense>
         </OptionalBoundary>
       )}
