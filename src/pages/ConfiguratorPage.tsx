@@ -499,7 +499,7 @@ const ConfiguratorPage = () => {
          кнопку, не видя разницы. Вернём, когда в модели появятся размеченные
          карбоновые детали: капот, зеркала, накладки порогов. */
       ...(canOpen
-        ? [{ id: "openings" as const, label: "Openings", value: [config.doors && "Doors", config.hood && "Hood", config.trunk && "Trunk"].filter(Boolean).join(" · ") || "Closed", icon: DoorOpen }]
+        ? [{ id: "openings" as const, label: t("config.openings"), value: [config.doors && t("config.doors"), config.hood && t("config.hood"), config.trunk && t("config.trunk")].filter(Boolean).join(" · ") || t("config.closed"), icon: DoorOpen }]
         : []),
       { id: "lights" as const, label: t("config.lights"), value: config.lights ? t("config.lightsOn") : t("config.lightsOff"), icon: Lightbulb },
       { id: "env" as const, label: t("config.environment"), value: config.night ? t("config.envNight") : t("config.envStudio"), icon: SunMoon },
@@ -521,7 +521,7 @@ const ConfiguratorPage = () => {
     { label: t("config.environment"), value: config.night ? t("config.envNight") : t("config.envStudio") },
     ...(hasInterior ? [{ label: t("config.interior"), value: INTERIOR_FINISHES[config.interior].name }] : []),
     ...(canOpen
-      ? [{ label: "Openings", value: [config.doors && "4 doors", config.hood && "hood", config.trunk && "trunk"].filter(Boolean).join(" · ") || "closed" }]
+      ? [{ label: t("config.openings"), value: [config.doors && t("config.doors"), config.hood && t("config.hood"), config.trunk && t("config.trunk")].filter(Boolean).join(" · ") || t("config.closed") }]
       : []),
     { label: "Price", value: formatPrice(price) },
   ];
@@ -598,24 +598,24 @@ const ConfiguratorPage = () => {
                 selected: config.doors,
                 onClick: () => set({ doors: !config.doors }),
                 preview: <DoorOpen className="h-8 w-8" strokeWidth={1.35} />,
-                title: "Open 4 Doors",
-                subtitle: config.doors ? "Open" : "Closed",
+                title: t("config.doors"),
+                subtitle: config.doors ? t("config.open") : t("config.closed"),
               },
               {
                 key: "hood",
                 selected: config.hood,
                 onClick: () => set({ hood: !config.hood }),
                 preview: <Car className="h-8 w-8" strokeWidth={1.35} />,
-                title: "Open Hood",
-                subtitle: config.hood ? "Open" : "Closed",
+                title: t("config.hood"),
+                subtitle: config.hood ? t("config.open") : t("config.closed"),
               },
               {
                 key: "trunk",
                 selected: config.trunk,
                 onClick: () => set({ trunk: !config.trunk }),
                 preview: <Package className="h-8 w-8" strokeWidth={1.35} />,
-                title: "Open Trunk",
-                subtitle: config.trunk ? "Open" : "Closed",
+                title: t("config.trunk"),
+                subtitle: config.trunk ? t("config.open") : t("config.closed"),
               },
             ]
           : [];
