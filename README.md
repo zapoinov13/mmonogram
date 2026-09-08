@@ -154,7 +154,7 @@ npm run lint             # Проверка кода ESLint
 
 - **`QUICK_START.md`** - Быстрый старт за 3 минуты
 - **`DEPLOYMENT.md`** - Полное руководство по развертыванию
-- **`OPTIMIZATION_REPORT.md`** - Отчет о проведенной оптимизации
+- **`docs/archive/OPTIMIZATION_REPORT.md`** - Отчет о проведенной оптимизации
 
 ---
 

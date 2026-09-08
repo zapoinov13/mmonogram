@@ -108,7 +108,7 @@ npm run lint         # Проверить код
 ## 🎯 Быстрые ссылки
 
 - **Полная документация**: `DEPLOYMENT.md`
-- **Оптимизация**: `OPTIMIZATION_REPORT.md`
+- **Оптимизация**: `docs/archive/OPTIMIZATION_REPORT.md`
 - **README**: `README.md`
 
 ---
