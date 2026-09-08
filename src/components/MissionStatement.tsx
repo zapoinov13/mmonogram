@@ -23,7 +23,7 @@ const MissionStatement = memo((_props: MissionStatementProps) => {
   );
 
   return (
-    <section className="relative min-h-[46vh] sm:min-h-[50vh] md:min-h-[54vh] flex items-center justify-center bg-premium-black overflow-hidden">
+    <section className="relative flex items-center justify-center bg-premium-black overflow-hidden py-20 sm:py-24 md:py-28 lg:py-32">
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
 
       <div className="absolute inset-0 opacity-[0.03]">

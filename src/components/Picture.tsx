@@ -67,7 +67,6 @@ const Picture = memo(function Picture({
       sizes={sizes}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
-      fetchPriority={priority ? "high" : "auto"}
       width={width}
       height={height}
       style={style}
