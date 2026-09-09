@@ -468,6 +468,7 @@ export default function ConfiguratorScene({
   }, [onReady]);
   const safeFocus = PRESETS[focus] ? focus : "default";
   const interior = isInteriorFocus(safeFocus);
+  const cadCabin = useMemo(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("cad") === "1", []);
   const seat = useMemo(() => {
     const eye = PRESETS[safeFocus][isMobile ? "mobile" : "desktop"].eye;
     return eye ? new THREE.Vector3(...eye) : null;
@@ -523,14 +524,14 @@ export default function ConfiguratorScene({
             десятки сантиметров, и без него ближняя кожа выбивается в серое. */}
         <pointLight
           position={[CABIN_MID_X + 0.5, CABIN_ROOF_Y - 0.12, 0]}
-          intensity={1.15}
+          intensity={cadCabin ? 0.32 : 1.15}
           distance={3.4}
           decay={2}
           color="#fff3e8"
         />
         <pointLight
           position={[CABIN_MID_X - 0.9, CABIN_ROOF_Y - 0.12, 0]}
-          intensity={1.2}
+          intensity={cadCabin ? 0.34 : 1.2}
           distance={3.0}
           decay={2}
           color="#fff1e4"

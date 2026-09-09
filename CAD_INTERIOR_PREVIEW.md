@@ -38,7 +38,8 @@ material roles, compression, and preservation of the default file selection.
 ## Remaining Visual Work
 
 - Refine CAD/custom overlaps around headrests and dashboard trim.
-- Replace the simple steering-center cover with finished geometry.
+- Original CAD steering pad and emblem now replace the temporary center cover;
+  the separate compressed asset is checked under a 250 kB budget.
 - Improve material assignment and upholstery shading using source references.
 - Complete mobile/exterior regression checks before promoting to default.
 - Door articulation is not implemented by this import.

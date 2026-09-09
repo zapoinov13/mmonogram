@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_INTERIOR_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -107,7 +107,7 @@ function Parts({
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
-      if (url === CAD_INTERIOR_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_STEERING_CENTER_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -441,6 +441,14 @@ export default function GClassGLTF({
         <OptionalBoundary label="отделка CAD-салона">
           <Suspense fallback={null}>
             <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} />
+          </Suspense>
+        </OptionalBoundary>
+      )}
+
+      {showInterior && cadInterior && (
+        <OptionalBoundary label="центральная часть руля">
+          <Suspense fallback={null}>
+            <Parts url={CAD_STEERING_CENTER_URL} fit={fit} kind="interior" materials={materials} />
           </Suspense>
         </OptionalBoundary>
       )}

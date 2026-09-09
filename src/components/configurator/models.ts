@@ -15,6 +15,7 @@
 export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
 export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
+export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 
 /*
  * Руль подключён отдельным файлом: так можно менять качество этой заметной

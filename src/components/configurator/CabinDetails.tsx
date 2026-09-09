@@ -70,12 +70,7 @@ export default function CabinDetails({ night, interior, instrumentsOnly = false 
           <meshStandardMaterial color="#080a0d" roughness={0.28} />
         </RoundedBox>
       )}
-      {instrumentsOnly ? (
-        <mesh position={[0.395, 1.16, -1.437]} scale={[0.083, 0.073, 0.04]}>
-          <sphereGeometry args={[1, 32, 16]} />
-          <meshStandardMaterial color={finish.primary} roughness={0.85} />
-        </mesh>
-      ) : (
+      {!instrumentsOnly && (
         <RoundedBox position={[0.395, 1.16, -1.437]} args={[0.19, 0.125, 0.065]} radius={0.025} smoothness={3}>
           <meshStandardMaterial color={finish.primary} roughness={0.75} />
         </RoundedBox>
