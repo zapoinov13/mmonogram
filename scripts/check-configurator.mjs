@@ -171,7 +171,7 @@ const MIN_PARTS = { wheel: 4, light: 3 };
 /* ---- Проверки -------------------------------------------------------- */
 
 const referenced = new Set();
-for (const cadPreview of src.matchAll(/CAD_(?:INTERIOR|STEERING_CENTER)_URL\s*=\s*`\$\{MODEL_BASE\}([^`]+)`/g)) {
+for (const cadPreview of src.matchAll(/CAD_(?:BODY|INTERIOR|STEERING_CENTER)_URL\s*=\s*`\$\{MODEL_BASE\}([^`]+)`/g)) {
   const path = onDisk(cadPreview[1]);
   referenced.add(path);
   if (!existsSync(path)) errors.push(`CAD preview: missing ${path}`);

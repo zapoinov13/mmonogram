@@ -5,8 +5,12 @@ The source stays outside the repository. Steering is supplied separately.
 """
 import collections
 import sys
+from pathlib import Path
 
 import bpy
+
+sys.path.insert(0, str(Path(__file__).parent))
+from cad_mesh import clean_cad_mesh
 
 
 def role_for(name):
@@ -33,6 +37,9 @@ for obj in list(bpy.data.objects):
         continue
     triangles = sum(len(poly.vertices) - 2 for poly in obj.data.polygons)
     before += triangles
+    # CAD tessellation contains disconnected coincident vertices. Collapsing
+    # those faces independently opens cracks along otherwise shared seams.
+    clean_cad_mesh(obj.data)
     if triangles > 800:
         modifier = obj.modifiers.new("Web reduction", "DECIMATE")
         modifier.ratio = max(0.035, 800 / triangles)
@@ -74,6 +81,7 @@ for (assembly, role), objects in groups.items():
     obj.data.materials.append(materials[role])
     for polygon in obj.data.polygons:
         polygon.use_smooth = True
+    obj.data.set_sharp_from_angle(angle=0.6)
 
 bpy.ops.export_scene.gltf(
     filepath=output,

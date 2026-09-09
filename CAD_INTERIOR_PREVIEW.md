@@ -46,3 +46,20 @@ material roles, compression, and preservation of the default file selection.
 
 No claim of photographic realism or production-ready cabin is made by this
 preview. Source FBX and intermediate files must not be committed.
+# Geometry repair, 2026-09-09
+
+The visible tears remained with both custom trim and exterior hidden. Welding
+coincident CAD vertices before decimation removed the tears in the same front
+cabin view. Smooth shading now preserves edges above 0.6 radians. Cleanup has
+a Blender regression test (`scripts/cad-mesh.test.py`) covering shared seams,
+nearby separate trim and idempotence.
+
+The rebuilt cabin is 4.84 MiB / 953,271 triangles. CAD preview also uses the
+cleaned 901 KiB body, rebuilt from the verified Yandex stock FBX. Default and
+HQ files remain unchanged. Glass tint and tire color changes are CAD-only.
+
+Verified build, CAD budget, Gold mapping, camera tests, desktop front view,
+mobile driver and exterior views. Remaining visual work: custom/CAD trim
+ownership, instrument display, leather detail, wheel and kit geometry.
+The FBX references external textures absent from the shared folder; these
+exports still rely on runtime materials. This is not a final photo match.

@@ -15,6 +15,7 @@
 export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
 export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
+export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 
 /*
@@ -99,7 +100,7 @@ export function carFiles(car: CarModel): CarFiles {
   if (typeof window === "undefined") return car.files;
   const params = new URLSearchParams(window.location.search);
   // CAD comparison uses the lightweight body; the renderer adds custom trim.
-  if (params.get("cad") === "1") return { ...car.files, interior: CAD_INTERIOR_URL };
+  if (params.get("cad") === "1") return { ...car.files, body: CAD_BODY_URL, interior: CAD_INTERIOR_URL };
   const hq = params.has("hq");
   return hq && car.filesHq ? car.filesHq : car.files;
 }
