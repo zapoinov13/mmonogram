@@ -63,6 +63,8 @@ export default function CabinDetails({ night, interior, instrumentsOnly = false 
   const display = useMemo(instrumentTexture, []);
   const finish = INTERIOR_FINISHES[interior] ?? INTERIOR_FINISHES[0];
   useEffect(() => () => display.dispose(), [display]);
+  // Gold Package references show the original dark display, not invented gauges.
+  if (instrumentsOnly) return null;
   const instruments = (
     <group>
       {!instrumentsOnly && (
@@ -84,7 +86,6 @@ export default function CabinDetails({ night, interior, instrumentsOnly = false 
       </mesh>
     </group>
   );
-  if (instrumentsOnly) return instruments;
   return (
     <group>
       {[-0.395, 0.395].map((x) => (

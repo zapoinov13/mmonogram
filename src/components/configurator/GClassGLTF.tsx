@@ -14,6 +14,8 @@ import {
   type Fit,
 } from "./fitModel";
 import CabinDetails from "./CabinDetails";
+import { goldCustomRole } from "./goldInterior";
+import GoldRearScreens from "./GoldRearScreens";
 
 /**
  * Оцифрованная сборка G63 вместо процедурной заглушки.
@@ -62,6 +64,7 @@ function Parts({
   onGround,
   onLoaded,
   hideWheels = false,
+  goldTrim = false,
 }: {
   url: string;
   fit?: Fit;
@@ -75,6 +78,7 @@ function Parts({
   onGround?: (url: string, minY: number) => void;
   onLoaded?: () => void;
   hideWheels?: boolean;
+  goldTrim?: boolean;
 }) {
   const { scene } = useGLTF(url, DRACO_PATH);
 
@@ -138,7 +142,10 @@ function Parts({
     if (kind === "interior") {
       const cabin = new THREE.Box3().setFromObject(root);
       const dashAtMax = cabinDashAtMax(kept.map((k) => k.box), cabin);
-      for (const { mesh, box } of kept) byRole[classifyCabin(box, cabin, dashAtMax)].push(mesh);
+      for (const { mesh, box } of kept) {
+        const role = goldTrim ? goldCustomRole(mesh.name) : undefined;
+        byRole[role ?? classifyCabin(box, cabin, dashAtMax)].push(mesh);
+      }
     } else {
       for (const { mesh, box } of kept) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
@@ -155,7 +162,7 @@ function Parts({
     }
 
     return { root, byRole, fit, minY: new THREE.Box3().setFromObject(root).min.y };
-  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels]);
+  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, goldTrim]);
 
   useLayoutEffect(() => {
     onGround?.(url, prepared.minY);
@@ -338,8 +345,8 @@ export default function GClassGLTF({
         side: THREE.DoubleSide,
         color: "#0b0b0c",
         metalness: cadInterior ? 0.15 : 0.5,
-        roughness: cadInterior ? 0.4 : 0.14,
-        envMapIntensity: cadInterior ? 0.15 : 0.4,
+        roughness: cadInterior ? 0.21 : 0.14,
+        envMapIntensity: cadInterior ? 0.28 : 0.4,
       }),
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
@@ -394,6 +401,7 @@ export default function GClassGLTF({
     <group position-y={groundOffset}>
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
         <CabinDetails night={config.night} interior={config.interior} instrumentsOnly={files.interior === CAD_INTERIOR_URL} />
+        {cadInterior && <GoldRearScreens />}
       </group>
       <Parts
         url={files.body}
@@ -440,7 +448,7 @@ export default function GClassGLTF({
       {showInterior && cadInterior && car.files.interior && (
         <OptionalBoundary label="отделка CAD-салона">
           <Suspense fallback={null}>
-            <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} />
+            <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
           </Suspense>
         </OptionalBoundary>
       )}
