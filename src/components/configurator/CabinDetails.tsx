@@ -59,10 +59,37 @@ function instrumentTexture() {
   return texture;
 }
 
-export default function CabinDetails({ night, interior }: { night: boolean; interior: number }) {
+export default function CabinDetails({ night, interior, instrumentsOnly = false }: { night: boolean; interior: number; instrumentsOnly?: boolean }) {
   const display = useMemo(instrumentTexture, []);
   const finish = INTERIOR_FINISHES[interior] ?? INTERIOR_FINISHES[0];
   useEffect(() => () => display.dispose(), [display]);
+  const instruments = (
+    <group>
+      {!instrumentsOnly && (
+        <RoundedBox position={[0.24, 1.315, -1.16]} args={[0.87, 0.24, 0.025]} radius={0.01} smoothness={2}>
+          <meshStandardMaterial color="#080a0d" roughness={0.28} />
+        </RoundedBox>
+      )}
+      {instrumentsOnly ? (
+        <mesh position={[0.395, 1.16, -1.437]} scale={[0.083, 0.073, 0.04]}>
+          <sphereGeometry args={[1, 32, 16]} />
+          <meshStandardMaterial color={finish.primary} roughness={0.85} />
+        </mesh>
+      ) : (
+        <RoundedBox position={[0.395, 1.16, -1.437]} args={[0.19, 0.125, 0.065]} radius={0.025} smoothness={3}>
+          <meshStandardMaterial color={finish.primary} roughness={0.75} />
+        </RoundedBox>
+      )}
+      <mesh
+        position={instrumentsOnly ? [0.22, 1.183, -1.155] : [0.24, 1.315, -1.174]}
+        rotation={[instrumentsOnly ? -0.28 : 0, Math.PI, 0]}
+      >
+        <planeGeometry args={instrumentsOnly ? [0.65, 0.113] : [0.84, 0.21]} />
+        <meshBasicMaterial map={display} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+  if (instrumentsOnly) return instruments;
   return (
     <group>
       {[-0.395, 0.395].map((x) => (
@@ -82,12 +109,6 @@ export default function CabinDetails({ night, interior }: { night: boolean; inte
       ))}
       <RoundedBox position={[0, 0.665, -1.64]} args={[0.255, 0.39, 0.95]} radius={0.045} smoothness={3}>
         <meshStandardMaterial color={finish.primary} roughness={0.72} />
-      </RoundedBox>
-      <RoundedBox position={[0.24, 1.315, -1.16]} args={[0.87, 0.24, 0.025]} radius={0.01} smoothness={2}>
-        <meshStandardMaterial color="#080a0d" roughness={0.28} />
-      </RoundedBox>
-      <RoundedBox position={[0.395, 1.16, -1.437]} args={[0.19, 0.125, 0.065]} radius={0.025} smoothness={3}>
-        <meshStandardMaterial color={finish.primary} roughness={0.75} />
       </RoundedBox>
       <RoundedBox position={[0, 1.195, -1.13]} args={[1.41, 0.055, 0.22]} radius={0.02} smoothness={2}>
         <meshStandardMaterial color={finish.primary} roughness={0.8} />
@@ -112,10 +133,7 @@ export default function CabinDetails({ night, interior }: { night: boolean; inte
           <meshStandardMaterial color="#171719" roughness={0.92} />
         </mesh>
       ))}
-      <mesh position={[0.24, 1.315, -1.174]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[0.84, 0.21]} />
-        <meshBasicMaterial map={display} toneMapped={false} />
-      </mesh>
+      {instruments}
       {[-0.73, 0.73].map((x) => (
         <mesh key={x} position={[x, 1.02, -2.06]}>
           <boxGeometry args={[0.008, 0.006, 1.9]} />

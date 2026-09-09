@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_INTERIOR_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -105,6 +105,17 @@ function Parts({
 
       if (sourceMaterials) return;
 
+      // CAD export has explicit roles; spatial heuristics would misclassify
+      // joined assemblies or discard legitimate thin panels as debris.
+      if (url === CAD_INTERIOR_URL) {
+        const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+        const role = source.name as PartRole;
+        if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
+          byRole[role].push(mesh);
+        }
+        return;
+      }
+
       if (hideWheels && MESH_RULES.some((rule) => rule.role === "wheel" && rule.test.test(mesh.name))) {
         mesh.visible = false;
         return;
@@ -192,6 +203,7 @@ export default function GClassGLTF({
   const car: CarModel = CARS[config.model] ?? CARS[DEFAULT_CAR];
   /* Лёгкий набор по умолчанию, CAD — по ?hq=1. См. carFiles() в models.ts. */
   const files = useMemo(() => carFiles(car), [car]);
+  const cadInterior = files.interior === CAD_INTERIOR_URL;
   const body = useGLTF(files.body, DRACO_PATH);
   const fit = useMemo(() => computeFit(body.scene.clone(true), car.length), [body.scene, car.length]);
   const [steeringReady, setSteeringReady] = useState(false);
@@ -325,9 +337,9 @@ export default function GClassGLTF({
       cabinTrim: new THREE.MeshStandardMaterial({
         side: THREE.DoubleSide,
         color: "#0b0b0c",
-        metalness: 0.5,
-        roughness: 0.14,
-        envMapIntensity: 0.4,
+        metalness: cadInterior ? 0.15 : 0.5,
+        roughness: cadInterior ? 0.4 : 0.14,
+        envMapIntensity: cadInterior ? 0.15 : 0.4,
       }),
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
@@ -341,7 +353,7 @@ export default function GClassGLTF({
       cabinFloor: new THREE.MeshStandardMaterial({ color: "#0e0c0c", metalness: 0, roughness: 0.96, envMapIntensity: 0.05 }),
       cabinRoof: new THREE.MeshStandardMaterial({ color: "#141312", metalness: 0, roughness: 0.9, envMapIntensity: 0.05 }),
     };
-  }, [debugRoles, interiorVisible, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
+  }, [debugRoles, interiorVisible, cadInterior, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
 
   useLayoutEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
@@ -381,7 +393,7 @@ export default function GClassGLTF({
   return (
     <group position-y={groundOffset}>
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
-        <CabinDetails night={config.night} interior={config.interior} />
+        <CabinDetails night={config.night} interior={config.interior} instrumentsOnly={files.interior === CAD_INTERIOR_URL} />
       </group>
       <Parts
         url={files.body}
@@ -421,6 +433,14 @@ export default function GClassGLTF({
               materials={materials}
               hideBox={interiorSteeringMask}
             />
+          </Suspense>
+        </OptionalBoundary>
+      )}
+
+      {showInterior && cadInterior && car.files.interior && (
+        <OptionalBoundary label="отделка CAD-салона">
+          <Suspense fallback={null}>
+            <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} />
           </Suspense>
         </OptionalBoundary>
       )}

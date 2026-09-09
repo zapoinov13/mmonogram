@@ -300,9 +300,13 @@ const ConfiguratorPage = () => {
      не с того вида, с которого её отправили. */
   const syncUrl = useCallback(
     (next: BuildConfig, nextFocus: CameraFocus) => {
-      const params: Record<string, string> = { c: encodeConfig(next) };
-      if (nextFocus !== "default") params.v = nextFocus;
-      setSearchParams(params, { replace: true });
+      setSearchParams((previous) => {
+        const params = new URLSearchParams(previous);
+        params.set("c", encodeConfig(next));
+        if (nextFocus !== "default") params.set("v", nextFocus);
+        else params.delete("v");
+        return params;
+      }, { replace: true });
     },
     [setSearchParams]
   );

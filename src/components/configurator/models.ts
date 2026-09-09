@@ -14,6 +14,7 @@
 /** Файлы лежат в public/models, декодер Draco — в public/draco. */
 export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
+export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
 
 /*
  * Руль подключён отдельным файлом: так можно менять качество этой заметной
@@ -95,7 +96,10 @@ export const CARS: Record<CarId, CarModel> = {
  */
 export function carFiles(car: CarModel): CarFiles {
   if (typeof window === "undefined") return car.files;
-  const hq = new URLSearchParams(window.location.search).has("hq");
+  const params = new URLSearchParams(window.location.search);
+  // CAD comparison uses the lightweight body; the renderer adds custom trim.
+  if (params.get("cad") === "1") return { ...car.files, interior: CAD_INTERIOR_URL };
+  const hq = params.has("hq");
   return hq && car.filesHq ? car.filesHq : car.files;
 }
 

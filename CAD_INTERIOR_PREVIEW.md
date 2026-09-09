@@ -1,0 +1,47 @@
+# CAD Interior Preview
+
+Status: local comparison, not approved as the default cabin.
+
+Open `/configurator?cad=1&v=interiorDriver`. The normal URL keeps the
+existing cabin. The comparison combines the CAD foundation with custom
+upholstery and the separate steering wheel; no heavy HQ body is loaded.
+
+## Source
+
+- Yandex public folder: https://disk.yandex.ru/d/RZhCpgph2qvKHA
+- File: `4) CAD interior.fbx`, 610,694,300 bytes.
+- SHA256: `5e08858c07e5e844450f6e07f3080e30475513533eeb107cd023172a2264e2de`.
+- 2,539 source meshes, 17,800,983 triangles, no materials or textures.
+- Blender Z-up coordinates export to the same source axes as the body.
+
+The CAD file alone is not the finished interior: upholstery is supplied by
+the custom interior asset. Standalone CAD inspection exposed seat backing
+and missing decorative surfaces. Do not replace the custom asset with CAD alone.
+
+## Conversion
+
+Import the FBX in Blender and save a working `.blend` outside the repository.
+Run `scripts/export-cad-interior.py` in Blender with the blend open and pass
+the intermediate GLB path after `--`. This excludes the duplicate steering
+assembly, assigns six material roles, reduces geometry, and joins by role
+within assemblies.
+
+Run `scripts/compact-cad.mjs INPUT OUTPUT TOOLCHAIN_PACKAGE_JSON` with an
+isolated toolchain containing `@gltf-transform/core`, `extensions`, and
+`functions` 4.4.2, plus `draco3dgltf` and `meshoptimizer`. It removes unused
+UVs, preserves normals, simplifies, and recompresses the result.
+
+Output: `public/models/cad-interior-web.glb`, 64 meshes, 934,593 triangles,
+6.34 MiB. Run `node scripts/cad-interior.test.ts` (Node 24) to check budgets,
+material roles, compression, and preservation of the default file selection.
+
+## Remaining Visual Work
+
+- Refine CAD/custom overlaps around headrests and dashboard trim.
+- Replace the simple steering-center cover with finished geometry.
+- Improve material assignment and upholstery shading using source references.
+- Complete mobile/exterior regression checks before promoting to default.
+- Door articulation is not implemented by this import.
+
+No claim of photographic realism or production-ready cabin is made by this
+preview. Source FBX and intermediate files must not be committed.

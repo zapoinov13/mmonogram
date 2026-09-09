@@ -171,6 +171,12 @@ const MIN_PARTS = { wheel: 4, light: 3 };
 /* ---- Проверки -------------------------------------------------------- */
 
 const referenced = new Set();
+const cadPreview = src.match(/CAD_INTERIOR_URL\s*=\s*`\$\{MODEL_BASE\}([^`]+)`/);
+if (cadPreview) {
+  const path = onDisk(cadPreview[1]);
+  referenced.add(path);
+  if (!existsSync(path)) errors.push(`CAD preview: missing ${path}`);
+}
 
 for (const car of cars) {
   const label = car.devOnly ? `${car.id} (только для разработки)` : car.id;
