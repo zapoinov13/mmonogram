@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -14,7 +14,7 @@ import {
   type Fit,
 } from "./fitModel";
 import CabinDetails from "./CabinDetails";
-import { goldCustomRole } from "./goldInterior";
+import { goldCustomRole, goldSteeringRole } from "./goldInterior";
 import GoldRearScreens from "./GoldRearScreens";
 
 /**
@@ -65,6 +65,7 @@ function Parts({
   onLoaded,
   hideWheels = false,
   goldTrim = false,
+  goldSteering = false,
 }: {
   url: string;
   fit?: Fit;
@@ -79,6 +80,7 @@ function Parts({
   onLoaded?: () => void;
   hideWheels?: boolean;
   goldTrim?: boolean;
+  goldSteering?: boolean;
 }) {
   const { scene } = useGLTF(url, DRACO_PATH);
 
@@ -94,7 +96,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
       light: [], brightwork: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -111,7 +113,7 @@ function Parts({
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
-      if (url === CAD_INTERIOR_URL || url === CAD_STEERING_CENTER_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -143,7 +145,7 @@ function Parts({
       const cabin = new THREE.Box3().setFromObject(root);
       const dashAtMax = cabinDashAtMax(kept.map((k) => k.box), cabin);
       for (const { mesh, box } of kept) {
-        const role = goldTrim ? goldCustomRole(mesh.name) : undefined;
+        const role = goldSteering ? goldSteeringRole(mesh.name) : goldTrim ? goldCustomRole(mesh.name) : undefined;
         byRole[role ?? classifyCabin(box, cabin, dashAtMax)].push(mesh);
       }
     } else {
@@ -162,7 +164,7 @@ function Parts({
     }
 
     return { root, byRole, fit, minY: new THREE.Box3().setFromObject(root).min.y };
-  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, goldTrim]);
+  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, goldTrim, goldSteering]);
 
   useLayoutEffect(() => {
     onGround?.(url, prepared.minY);
@@ -356,6 +358,9 @@ export default function GClassGLTF({
         specularIntensity: 0.08,
         envMapIntensity: 0.03,
       }),
+      steeringBlack: new THREE.MeshStandardMaterial({
+        color: "#101011", metalness: 0, roughness: 0.62, envMapIntensity: 0.12,
+      }),
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
       cabinMetal: new THREE.MeshStandardMaterial({
@@ -469,10 +474,18 @@ export default function GClassGLTF({
         </OptionalBoundary>
       )}
 
+      {showInterior && cadInterior && (
+        <OptionalBoundary label="кнопки и отделка руля">
+          <Suspense fallback={null}>
+            <Parts url={CAD_STEERING_CONTROLS_URL} fit={fit} kind="interior" materials={materials} />
+          </Suspense>
+        </OptionalBoundary>
+      )}
+
       {showInterior && files.steering && (
         <OptionalBoundary label="руль">
           <Suspense fallback={null}>
-            <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} />
+            <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} goldSteering={cadInterior} />
           </Suspense>
         </OptionalBoundary>
       )}

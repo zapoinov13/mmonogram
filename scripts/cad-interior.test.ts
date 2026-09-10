@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CAD_BODY_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CARS, DEFAULT_CAR, carFiles } from "../src/components/configurator/models.ts";
+import { CAD_BODY_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, carFiles } from "../src/components/configurator/models.ts";
 
 const car = CARS[DEFAULT_CAR];
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -26,6 +26,14 @@ const bytes = readFileSync(new URL("../public" + CAD_INTERIOR_URL, import.meta.u
 const bodyBytes = readFileSync(new URL("../public" + CAD_BODY_URL, import.meta.url));
 assert.ok(bodyBytes.length < 2 * 1024 * 1024, "cleaned body must stay lightweight");
 const centerBytes = readFileSync(new URL("../public" + CAD_STEERING_CENTER_URL, import.meta.url));
+const controlsBytes = readFileSync(new URL("../public" + CAD_STEERING_CONTROLS_URL, import.meta.url));
+assert.ok(controlsBytes.length < 300_000, "steering controls must stay below 300 kB");
+const controls = JSON.parse(controlsBytes.subarray(20, 20 + controlsBytes.readUInt32LE(12)).toString());
+assert.equal(controls.meshes.length, 18, "all original control components must survive export");
+assert.deepEqual(new Set(controls.materials.map((m: { name: string }) => m.name)), new Set(["steeringBlack", "cabinMetal"]));
+for (const suffix of ["9c04935", "b26678d", "744dc59", "7e05a66"]) {
+  assert.ok(controls.nodes.some((node: { name?: string }) => node.name?.endsWith(suffix)), `missing steering component ${suffix}`);
+}
 assert.ok(centerBytes.length < 250_000, "steering pad must remain a small detail asset");
 const center = JSON.parse(centerBytes.subarray(20, 20 + centerBytes.readUInt32LE(12)).toString());
 assert.equal(center.meshes.length, 3, "original pad, center and emblem must be present");
@@ -36,7 +44,7 @@ assert.equal(bytes.readUInt32LE(8), bytes.length);
 assert.ok(bytes.length < 8 * 1024 * 1024, "CAD cabin must fit its 8 MiB transfer budget");
 const totalBytes = [car.files.interior, car.files.steering].filter(Boolean).reduce((sum, path) => (
   sum + readFileSync(new URL("../public" + path, import.meta.url)).length
-), bytes.length + centerBytes.length + bodyBytes.length +
+), bytes.length + centerBytes.length + controlsBytes.length + bodyBytes.length +
   readFileSync(new URL("../public" + car.files.kit, import.meta.url)).length);
 assert.ok(totalBytes < 20 * 1024 * 1024, "complete CAD + custom trim assembly must stay below 20 MiB");
 const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());

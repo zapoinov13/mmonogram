@@ -5,6 +5,13 @@ const blackInserts = new Set([
 ]);
 const cognacShells = new Set(["014", "016", "017", "026", "033", "042", "043", "051", "053", "064", "072", "074", "110", "111"]);
 
+export function goldSteeringRole(name: string): "steeringBlack" | "cabinAccent" | "cabinTrim" | undefined {
+  if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?029$/.test(name)) return "steeringBlack";
+  if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?031$/.test(name)) return "cabinAccent";
+  if (name.includes("_lenkr_voli_amgnap")) return "cabinTrim";
+  return undefined;
+}
+
 export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "cabinTrim" | undefined {
   const plane = name.match(/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?(\d+)$/)?.[1];
   if (plane && blackInserts.has(plane)) return "cabinLeather";

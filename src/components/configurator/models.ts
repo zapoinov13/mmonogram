@@ -17,6 +17,7 @@ export const DRACO_PATH = "/draco/";
 export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
 export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
+export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
 
 /*
  * Руль подключён отдельным файлом: так можно менять качество этой заметной
@@ -128,6 +129,7 @@ export type PartRole =
   | "cabinAccent"  // бордовая кожа сидений — главный контраст салона
   | "cabinTrim"    // накладки передней панели: рояльный лак
   | "cabinDisplay"
+  | "steeringBlack"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
   | "cabinFloor"   // ковролин
   | "cabinRoof"    // потолок
@@ -304,6 +306,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   wheel: "#8e44ad",
   wheelAccent: "#d4af37",
   cabinDisplay: "#284b63",
+  steeringBlack: "#181818",
   tire: "#444444",
   glass: "#25d0c0",
   taillight: "#ff2d2d",

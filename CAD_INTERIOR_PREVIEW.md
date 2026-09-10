@@ -78,3 +78,22 @@ existing kit. A direct source FBX conversion was stopped after prolonged
 decimation; its raw blend cache is retained outside the repository. Rework
 the reduction per component before another conversion.
 Keep source FBX, blend caches and intermediate GLBs outside the repository.
+
+## Steering Controls
+
+The separate steering-wheel GLB contains four meshes with a single source
+material. The CAD comparison now explicitly assigns its outer rim to fixed
+black leather, the inner rim to the selected interior accent, and the carrier
+to black trim. Default/non-CAD steering remains unchanged.
+
+`scripts/export-steering-controls.py` extracts 18 original `_lenkr_voli_bdf_amg_dtr`
+components from the cached CAD scene. Run the normal compact-cad step after
+export. `cad-steering-controls.glb` adds approximately 210 kB and preserves both
+button housings and rollers. It loads independently of the center pad so a
+failed optional control asset cannot remove the existing center.
+
+Verified desktop 1280 x 800 and mobile 390 x 844 driver views, camera rotation,
+console errors, build, typecheck, scoped lint and CAD/Gold role tests. Remaining:
+the thin decorative surround and dashboard trim still differ from the photo.
+Further source exports were blocked when Blender became unavailable at its
+installed path; the successfully exported controls and raw CAD cache remain.
