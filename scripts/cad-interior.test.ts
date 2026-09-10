@@ -13,7 +13,10 @@ try {
   const preview = carFiles(car);
   assert.equal(preview.interior, CAD_INTERIOR_URL);
   assert.equal(preview.body, CAD_BODY_URL, "CAD comparison must use the cleaned lightweight body");
+  assert.equal(preview.kit, car.files.kit, "unapproved kit must not become the default");
   assert.equal(preview.steering, car.files.steering);
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cad=1&kit=clean" } } });
+  assert.equal(carFiles(car).kit, car.files.kit, "rejected kit candidate must not be selectable");
 } finally {
   if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
   else Reflect.deleteProperty(globalThis, "window");
@@ -31,12 +34,13 @@ assert.equal(bytes.readUInt32LE(0), 0x46546c67);
 assert.equal(bytes.readUInt32LE(4), 2);
 assert.equal(bytes.readUInt32LE(8), bytes.length);
 assert.ok(bytes.length < 8 * 1024 * 1024, "CAD cabin must fit its 8 MiB transfer budget");
-const totalBytes = Object.values(car.files).reduce((sum, path) => (
+const totalBytes = [car.files.interior, car.files.steering].filter(Boolean).reduce((sum, path) => (
   sum + readFileSync(new URL("../public" + path, import.meta.url)).length
-), bytes.length + centerBytes.length + bodyBytes.length);
+), bytes.length + centerBytes.length + bodyBytes.length +
+  readFileSync(new URL("../public" + car.files.kit, import.meta.url)).length);
 assert.ok(totalBytes < 20 * 1024 * 1024, "complete CAD + custom trim assembly must stay below 20 MiB");
 const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
-const roles = new Set(["cabinFloor", "cabinRoof", "cabinLeather", "cabinAccent", "cabinTrim", "cabinMetal"]);
+const roles = new Set(["cabinFloor", "cabinRoof", "cabinLeather", "cabinAccent", "cabinTrim", "cabinMetal", "cabinDisplay"]);
 assert.deepEqual(new Set(gltf.materials.map((m: { name: string }) => m.name)), roles);
 assert.ok(gltf.meshes.length <= 160, "merged CAD must stay within the draw-call budget");
 let triangles = 0;

@@ -15,6 +15,8 @@ from cad_mesh import clean_cad_mesh
 
 def role_for(name):
     name = name.lower()
+    if "_display_" in name:
+        return "cabinDisplay"
     if any(token in name for token in ("_gurt", "_fussm", "_boden", "_pedal")):
         return "cabinFloor"
     if any(token in name for token in ("_taste", "_schalter", "_radio", "_display", "_klima", "_blende", "_zbe")):
@@ -53,6 +55,7 @@ for obj in list(bpy.data.objects):
     groups[(assembly, role)].append(obj)
 
 palette = {
+    "cabinDisplay": (0.004, 0.005, 0.006, 1),
     "cabinFloor": (0.008, 0.008, 0.009, 1),
     "cabinRoof": (0.018, 0.018, 0.02, 1),
     "cabinLeather": (0.024, 0.022, 0.02, 1),

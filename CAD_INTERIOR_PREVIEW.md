@@ -23,7 +23,7 @@ and missing decorative surfaces. Do not replace the custom asset with CAD alone.
 Import the FBX in Blender and save a working `.blend` outside the repository.
 Run `scripts/export-cad-interior.py` in Blender with the blend open and pass
 the intermediate GLB path after `--`. This excludes the duplicate steering
-assembly, assigns six material roles, reduces geometry, and joins by role
+assembly, assigns seven material roles, reduces geometry, and joins by role
 within assemblies.
 
 Run `scripts/compact-cad.mjs INPUT OUTPUT TOOLCHAIN_PACKAGE_JSON` with an
@@ -31,8 +31,8 @@ isolated toolchain containing `@gltf-transform/core`, `extensions`, and
 `functions` 4.4.2, plus `draco3dgltf` and `meshoptimizer`. It removes unused
 UVs, preserves normals, simplifies, and recompresses the result.
 
-Output: `public/models/cad-interior-web.glb`, 64 meshes, 934,593 triangles,
-6.34 MiB. Run `node scripts/cad-interior.test.ts` (Node 24) to check budgets,
+Output: `public/models/cad-interior-web.glb`, 64 meshes, 953,271 triangles,
+4.84 MiB. Run `node scripts/cad-interior.test.ts` (Node 24) to check budgets,
 material roles, compression, and preservation of the default file selection.
 
 ## Remaining Visual Work
@@ -63,3 +63,18 @@ mobile driver and exterior views. Remaining visual work: custom/CAD trim
 ownership, instrument display, leather detail, wheel and kit geometry.
 The FBX references external textures absent from the shared folder; these
 exports still rely on runtime materials. This is not a final photo match.
+
+## Display and Kit Comparison, 2026-09-10
+
+CAD `_display_` meshes now have a separate `cabinDisplay` role. Their dark
+dielectric material uses low specular intensity so the cabin point lights do
+not produce an oversized white reflection. This is an unlit instrument screen
+matching the reference photographs, not a functional instrument UI. Driver
+and rotated cabin views were checked on desktop and at 390 x 844.
+
+The experimental kit failed visual review: wheel fins and grille remain
+distorted. It is not shipped or selectable. CAD and default URLs retain the
+existing kit. A direct source FBX conversion was stopped after prolonged
+decimation; its raw blend cache is retained outside the repository. Rework
+the reduction per component before another conversion.
+Keep source FBX, blend caches and intermediate GLBs outside the repository.

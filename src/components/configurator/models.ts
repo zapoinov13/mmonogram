@@ -127,6 +127,7 @@ export type PartRole =
   | "cabinLeather" // основная обивка салона: чёрная наппа
   | "cabinAccent"  // бордовая кожа сидений — главный контраст салона
   | "cabinTrim"    // накладки передней панели: рояльный лак
+  | "cabinDisplay"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
   | "cabinFloor"   // ковролин
   | "cabinRoof"    // потолок
@@ -302,6 +303,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   body: "#2f6fdb",
   wheel: "#8e44ad",
   wheelAccent: "#d4af37",
+  cabinDisplay: "#284b63",
   tire: "#444444",
   glass: "#25d0c0",
   taillight: "#ff2d2d",

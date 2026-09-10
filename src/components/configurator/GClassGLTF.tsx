@@ -94,7 +94,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
       light: [], brightwork: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -348,6 +348,13 @@ export default function GClassGLTF({
         metalness: cadInterior ? 0.15 : 0.5,
         roughness: cadInterior ? 0.21 : 0.14,
         envMapIntensity: cadInterior ? 0.28 : 0.4,
+      }),
+      cabinDisplay: new THREE.MeshPhysicalMaterial({
+        color: "#050607",
+        metalness: 0,
+        roughness: 0.65,
+        specularIntensity: 0.08,
+        envMapIntensity: 0.03,
       }),
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
