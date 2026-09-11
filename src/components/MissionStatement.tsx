@@ -23,8 +23,8 @@ const MissionStatement = memo((_props: MissionStatementProps) => {
   );
 
   return (
-    <section className="relative flex items-center justify-center bg-premium-black overflow-hidden py-20 sm:py-24 md:py-28 lg:py-32">
-      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+    <section className="relative flex items-center justify-center bg-premium-black overflow-hidden py-10 sm:py-12 md:py-16 lg:py-20">
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
 
       <div className="absolute inset-0 opacity-[0.03]">
         <div
@@ -51,7 +51,7 @@ const MissionStatement = memo((_props: MissionStatementProps) => {
           </h1>
 
           <motion.p
-            className="font-body text-sm sm:text-base md:text-lg text-white/70 mb-6 sm:mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4 break-words"
+            className="font-body text-sm sm:text-base md:text-lg text-white/70 mb-2 sm:mb-3 md:mb-4 leading-relaxed max-w-2xl mx-auto px-4 break-words"
             style={{ wordBreak: "normal", overflowWrap: "break-word" }}
           >
             {subtitle}

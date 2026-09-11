@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { Plugin } from "vite";
 
 /**
@@ -109,8 +109,8 @@ export default function responsiveImagesPlugin(): Plugin {
 
         for (const target of WIDTHS) {
           for (const [ext, encode] of [
-            ["avif", (p: sharp.Sharp) => p.avif(AVIF)],
-            ["webp", (p: sharp.Sharp) => p.webp(WEBP)],
+            ["avif", (p: Sharp) => p.avif(AVIF)],
+            ["webp", (p: Sharp) => p.webp(WEBP)],
           ] as const) {
             const name = `${base}-${target}.${ext}`;
             const out = join(dir, name);
