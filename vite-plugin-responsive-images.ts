@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { Plugin } from "vite";
 
 /**
