@@ -109,8 +109,8 @@ export default function responsiveImagesPlugin(): Plugin {
 
         for (const target of WIDTHS) {
           for (const [ext, encode] of [
-            ["avif", (p: sharp.Sharp) => p.avif(AVIF)],
-            ["webp", (p: sharp.Sharp) => p.webp(WEBP)],
+            ["avif", (p: Sharp) => p.avif(AVIF)],
+            ["webp", (p: Sharp) => p.webp(WEBP)],
           ] as const) {
             const name = `${base}-${target}.${ext}`;
             const out = join(dir, name);
