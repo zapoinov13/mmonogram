@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CAD_BODY_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, carFiles } from "../src/components/configurator/models.ts";
+import { CAD_BODY_URL, CAD_GRILLE_KIT_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, carFiles } from "../src/components/configurator/models.ts";
 
 const car = CARS[DEFAULT_CAR];
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -13,10 +13,10 @@ try {
   const preview = carFiles(car);
   assert.equal(preview.interior, CAD_INTERIOR_URL);
   assert.equal(preview.body, CAD_BODY_URL, "CAD comparison must use the cleaned lightweight body");
-  assert.equal(preview.kit, car.files.kit, "unapproved kit must not become the default");
+  assert.equal(preview.kit, CAD_GRILLE_KIT_URL, "CAD preview uses repaired grille");
   assert.equal(preview.steering, car.files.steering);
   Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cad=1&kit=clean" } } });
-  assert.equal(carFiles(car).kit, car.files.kit, "rejected kit candidate must not be selectable");
+  assert.equal(carFiles(car).kit, CAD_GRILLE_KIT_URL, "rejected whole-kit candidate must not be selectable");
 } finally {
   if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
   else Reflect.deleteProperty(globalThis, "window");
@@ -45,7 +45,7 @@ assert.ok(bytes.length < 8 * 1024 * 1024, "CAD cabin must fit its 8 MiB transfer
 const totalBytes = [car.files.interior, car.files.steering].filter(Boolean).reduce((sum, path) => (
   sum + readFileSync(new URL("../public" + path, import.meta.url)).length
 ), bytes.length + centerBytes.length + controlsBytes.length + bodyBytes.length +
-  readFileSync(new URL("../public" + car.files.kit, import.meta.url)).length);
+  readFileSync(new URL("../public" + CAD_GRILLE_KIT_URL, import.meta.url)).length);
 assert.ok(totalBytes < 20 * 1024 * 1024, "complete CAD + custom trim assembly must stay below 20 MiB");
 const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
 const roles = new Set(["cabinFloor", "cabinRoof", "cabinLeather", "cabinAccent", "cabinTrim", "cabinMetal", "cabinDisplay"]);

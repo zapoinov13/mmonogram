@@ -16,6 +16,7 @@ import {
 import CabinDetails from "./CabinDetails";
 import { goldCustomRole, goldSteeringRole } from "./goldInterior";
 import GoldRearScreens from "./GoldRearScreens";
+import { CAD_GRILLE_KIT_URL, hideReplacedGrilleFrame } from "./models";
 
 /**
  * Оцифрованная сборка G63 вместо процедурной заглушки.
@@ -64,6 +65,7 @@ function Parts({
   onGround,
   onLoaded,
   hideWheels = false,
+  hideGrilleFrame = false,
   goldTrim = false,
   goldSteering = false,
 }: {
@@ -79,6 +81,7 @@ function Parts({
   onGround?: (url: string, minY: number) => void;
   onLoaded?: () => void;
   hideWheels?: boolean;
+  hideGrilleFrame?: boolean;
   goldTrim?: boolean;
   goldSteering?: boolean;
 }) {
@@ -95,7 +98,7 @@ function Parts({
 
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
-      light: [], brightwork: [], carbon: [], cabinLeather: [], cabinAccent: [],
+      light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
       cabinTrim: [], cabinDisplay: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
@@ -110,6 +113,11 @@ function Parts({
       mesh.receiveShadow = true;
 
       if (sourceMaterials) return;
+
+      if (hideReplacedGrilleFrame(url, mesh.name, hideGrilleFrame)) {
+        mesh.visible = false;
+        return;
+      }
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
@@ -151,7 +159,9 @@ function Parts({
     } else {
       for (const { mesh, box } of kept) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-        byRole[classifyPart(describeMaterial(source), box, fit.carSize, mesh.name)].push(mesh);
+        const role = classifyPart(describeMaterial(source), box, fit.carSize, mesh.name);
+        const grille = url === CAD_GRILLE_KIT_URL && /chrome_V3|grill__|решетк/i.test(mesh.name);
+        byRole[grille && role === "brightwork" ? "grilleMetal" : role].push(mesh);
       }
     }
 
@@ -164,7 +174,7 @@ function Parts({
     }
 
     return { root, byRole, fit, minY: new THREE.Box3().setFromObject(root).min.y };
-  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, goldTrim, goldSteering]);
+  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, hideGrilleFrame, goldTrim, goldSteering]);
 
   useLayoutEffect(() => {
     onGround?.(url, prepared.minY);
@@ -289,6 +299,12 @@ export default function GClassGLTF({
       /* Решётка, кант по борту и вставки порогов идут одной отделкой. Золото
          по умолчанию: на g3-iconic-gold-front.jpg весь декоративный металл
          машины золотой, тёплая латунь, а не хром. */
+      grilleMetal: new THREE.MeshStandardMaterial({
+        color: grille.color,
+        metalness: grille.metalness,
+        roughness: Math.max(grille.roughness, 0.32),
+        envMapIntensity: 0.65,
+      }),
       brightwork: new THREE.MeshStandardMaterial({
         color: grille.color,
         metalness: grille.metalness,
@@ -423,6 +439,7 @@ export default function GClassGLTF({
         materials={materials}
         sourceMaterials={car.sourceMaterials}
         hideWheels={config.kit && kitReady}
+        hideGrilleFrame={config.kit && kitReady}
         onGround={reportGround}
       />
 

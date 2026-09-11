@@ -16,8 +16,16 @@ export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
 export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
 export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
+export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
+
+/** The cleaned body and custom kit contain coincident outer grille frames.
+ * Keep the body copy until the replacement is loaded. GLTFLoader sanitizes names. */
+export function hideReplacedGrilleFrame(url: string, name: string, kitReady: boolean): boolean {
+  return kitReady && url === CAD_BODY_URL &&
+    name.replace(/[.\s]/g, "").replace(/_/g, "") === "решеткарамамалая002";
+}
 
 /*
  * Руль подключён отдельным файлом: так можно менять качество этой заметной
@@ -101,7 +109,7 @@ export function carFiles(car: CarModel): CarFiles {
   if (typeof window === "undefined") return car.files;
   const params = new URLSearchParams(window.location.search);
   // CAD comparison uses the lightweight body; the renderer adds custom trim.
-  if (params.get("cad") === "1") return { ...car.files, body: CAD_BODY_URL, interior: CAD_INTERIOR_URL };
+  if (params.get("cad") === "1") return { ...car.files, body: CAD_BODY_URL, kit: CAD_GRILLE_KIT_URL, interior: CAD_INTERIOR_URL };
   const hq = params.has("hq");
   return hq && car.filesHq ? car.filesHq : car.files;
 }
@@ -124,6 +132,7 @@ export type PartRole =
   | "taillight" // красные рассеиватели фонарей
   | "light"     // светящиеся элементы фар
   | "brightwork"  // декоративный металл: у G63 Iconic он золотой, не хром
+  | "grilleMetal"
   | "carbon"
   | "cabinLeather" // основная обивка салона: чёрная наппа
   | "cabinAccent"  // бордовая кожа сидений — главный контраст салона
@@ -312,6 +321,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   taillight: "#ff2d2d",
   light: "#ffffff",
   brightwork: "#d9b25a",
+  grilleMetal: "#bc9850",
   carbon: "#ff8a2b",
   cabinLeather: "#2ecc71",
   cabinAccent: "#e056a0",
