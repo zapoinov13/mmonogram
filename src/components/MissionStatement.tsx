@@ -51,7 +51,7 @@ const MissionStatement = memo((_props: MissionStatementProps) => {
           </h1>
 
           <motion.p
-            className="font-body text-sm sm:text-base md:text-lg text-white/70 mb-6 sm:mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4 break-words"
+            className="font-body text-sm sm:text-base md:text-lg text-white/70 mb-2 sm:mb-3 md:mb-4 leading-relaxed max-w-2xl mx-auto px-4 break-words"
             style={{ wordBreak: "normal", overflowWrap: "break-word" }}
           >
             {subtitle}
