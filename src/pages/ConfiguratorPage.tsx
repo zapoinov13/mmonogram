@@ -1,4 +1,5 @@
-import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import "./ConfiguratorTuning.css";
 import {
   Armchair,
   Camera,
@@ -112,12 +113,7 @@ type OptionItem = {
   preview: ReactNode;
   selected: boolean;
   onClick: () => void;
-  /**
-   * Подзаголовок над первой опцией группы. Нужен там, где в одном списке
-   * лежат разные по смыслу вещи: в салоне это отделка кожи и ракурс камеры —
-   * одинаковыми карточками они читались как один ряд равнозначных кнопок.
-   */
-  group?: string;
+  control?: "camera";
 };
 
 /** Свой знак на каждый ракурс салона. */
@@ -238,24 +234,19 @@ function OptionCard({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={cn(
-        "group relative flex w-full shrink-0 items-center gap-3 rounded-md border p-2.5 text-left transition-colors duration-150",
-        selected
-          ? "border-white/70 bg-white/[0.12]"
-          : "border-white/10 bg-white/[0.035] hover:border-white/35 hover:bg-white/[0.08]"
-      )}
+      className="tuning-option"
     >
-      <span className="flex h-12 w-[76px] shrink-0 items-center justify-center text-white/75">{preview}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-body text-[13px] text-white">{title}</span>
+      <span className="tuning-option-preview">{preview}</span>
+      <span className="tuning-option-copy">
+        <span className="tuning-option-title">{title}</span>
         {subtitle && (
-          <span className="mt-0.5 block truncate font-body text-[10px] uppercase tracking-[0.14em] text-white/38">
+          <span className="tuning-option-detail">
             {subtitle}
           </span>
         )}
       </span>
       {selected && (
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-black">
+        <span className="tuning-option-check">
           <Check className="h-3.5 w-3.5" strokeWidth={2.4} />
         </span>
       )}
@@ -276,6 +267,8 @@ const ConfiguratorPage = () => {
   const [tuningOpen, setTuningOpen] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { optionsRef.current?.scrollTo({ top: 0 }); }, [activeSection]);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [screenshotFlash, setScreenshotFlash] = useState(false);
@@ -671,9 +664,8 @@ const ConfiguratorPage = () => {
             preview: <LeatherChip primary={finish.primary} accent={finish.accent} />,
             title: finish.name,
             subtitle: index === 0 ? "Atelier standard" : "Bespoke order",
-            group: index === 0 ? "Leather" : undefined,
           })),
-          ...interiorViews.map(([view, label], index) => {
+          ...interiorViews.map(([view, label]) => {
             const Icon = INTERIOR_VIEW_ICONS[view];
             return {
               key: view,
@@ -683,7 +675,7 @@ const ConfiguratorPage = () => {
                  не давали понять, чем строки отличаются. */
               preview: <Icon className="h-7 w-7" strokeWidth={1.35} />,
               title: label,
-              group: index === 0 ? "Where to look from" : undefined,
+              control: "camera" as const,
             };
           }),
         ];
@@ -829,12 +821,12 @@ const ConfiguratorPage = () => {
         ref={panelRef}
         aria-label="Tuning"
         className={cn(
-          "absolute z-40 flex flex-col border-white/10 bg-[rgba(8,8,9,0.93)] shadow-[0_-22px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl transition-transform duration-300 ease-out will-change-transform",
-          "inset-x-0 bottom-0 max-h-[54dvh] rounded-t-2xl border-t",
+          "tuning-panel absolute z-40 flex flex-col border-white/10 bg-[#101011] shadow-[0_-22px_70px_rgba(0,0,0,0.55)] transition-transform duration-300 ease-out will-change-transform",
+          "inset-x-0 bottom-0 h-[54dvh] rounded-t-lg border-t",
           /* На десктопе панель во всю высоту: сдвинутая сцена иначе оголяет
              полосу справа под шапкой. Шапка сайта лежит выше по z-index,
              поэтому её кнопки остаются кликабельными поверх панели. */
-          "drawer:inset-x-auto drawer:bottom-0 drawer:right-0 drawer:top-0 drawer:max-h-none drawer:w-[22rem] drawer:rounded-none md:w-[25rem] drawer:border-l drawer:border-t-0 drawer:pt-[4.5rem]",
+          "drawer:inset-x-auto drawer:bottom-0 drawer:right-0 drawer:top-0 drawer:h-auto drawer:max-h-none drawer:w-[22rem] drawer:rounded-none md:w-[25rem] drawer:border-l drawer:border-t-0 drawer:pt-[4.5rem]",
           tuningOpen ? "translate-y-0 drawer:translate-x-0" : "translate-y-full drawer:translate-y-0 drawer:translate-x-full"
         )}
       >
@@ -866,10 +858,10 @@ const ConfiguratorPage = () => {
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col drawer:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col">
           <nav
             aria-label="Tuning sections"
-            className="no-scrollbar flex shrink-0 gap-1.5 overflow-x-auto border-b border-white/10 p-2 drawer:w-[6.75rem] drawer:flex-col drawer:overflow-x-visible drawer:overflow-y-auto drawer:border-b-0 drawer:border-r"
+            className="tuning-sections"
           >
             {sections.map((item) => {
               const Icon = item.icon;
@@ -880,16 +872,13 @@ const ConfiguratorPage = () => {
                   type="button"
                   onClick={() => chooseSection(item.id)}
                   aria-current={active}
-                  className={cn(
-                    "flex min-h-11 shrink-0 items-center gap-2 rounded-md border px-3 py-2 transition-colors duration-150 drawer:min-h-[4rem] drawer:w-full drawer:flex-col drawer:justify-center drawer:gap-1 drawer:px-1.5 drawer:py-2 drawer:text-center",
-                    active
-                      ? "border-white/70 bg-white text-black"
-                      : "border-white/10 bg-white/[0.04] text-white/80 hover:border-white/30 hover:bg-white/[0.09]"
-                  )}
+                  aria-label={item.label}
+                  title={item.label}
+                  className="tuning-section"
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
-                  <span className="font-body text-[10px] uppercase tracking-[0.14em] drawer:text-[9px] drawer:leading-tight">
-                    {item.label}
+                  <span aria-hidden="true">
+                    {{ signature: "Series", exterior: "Paint", wheels: "Wheels", openings: "Doors", lights: "Lights", env: "Studio", interior: "Cabin", overview: "Build" }[item.id]}
                   </span>
                 </button>
               );
@@ -898,17 +887,17 @@ const ConfiguratorPage = () => {
 
           <div className="flex min-h-0 flex-1 flex-col">
             {activeMeta && (
-              <div className="flex shrink-0 items-baseline gap-2 px-3 pt-2 drawer:pt-3">
-                <span className="shrink-0 font-body text-[11px] uppercase tracking-[0.18em] text-white/45">
+              <div className="tuning-active-heading">
+                <span>
                   {activeMeta.label}
                 </span>
                 {activeMeta.value && (
-                  <span className="min-w-0 truncate font-body text-[11px] text-white/70">{activeMeta.value}</span>
+                  <span className="tuning-active-value">{activeMeta.value}</span>
                 )}
               </div>
             )}
 
-            <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-2 drawer:p-3">
+            <div ref={optionsRef} className="tuning-options-scroll">
               {activeSection === "overview" ? (
                 <>
                   <button
@@ -998,30 +987,43 @@ const ConfiguratorPage = () => {
                     </div>
                   ))}
                 </>
+              ) : activeSection === "lights" ? (
+                <div className="tuning-light-row">
+                  <Lightbulb size={22} />
+                  <span>{t("config.lights")}<small>{config.lights ? t("config.lightsOn") : t("config.lightsOff")}</small></span>
+                  <button type="button" role="switch" aria-checked={config.lights} aria-label={t("config.lights")}
+                    className="tuning-switch" onClick={() => set({ lights: !config.lights })}><span /></button>
+                </div>
               ) : (
-                options.map((option) => (
-                  <Fragment key={option.key}>
-                    {option.group && (
-                      <p className="mt-1 flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.2em] text-white/35 first:mt-0">
-                        {option.group}
-                        <span className="h-px flex-1 bg-white/10" />
-                      </p>
-                    )}
+                <>
+                  {activeSection === "interior" && (
+                    <div className="tuning-camera-views" aria-label="Interior camera">
+                      {options.filter(option => option.control === "camera").map(option => (
+                        <button type="button" key={option.key} aria-pressed={option.selected} onClick={option.onClick}>
+                          {option.preview}<span>{option.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className={cn("tuning-option-grid", activeSection === "signature" && "tuning-packages")}>
+                    {options.filter(option => option.control !== "camera").map(option => (
                     <OptionCard
+                      key={option.key}
                       selected={option.selected}
                       onClick={option.onClick}
                       title={option.title}
                       subtitle={option.subtitle}
                       preview={option.preview}
                     />
-                  </Fragment>
-                ))
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 border-t border-white/10 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] drawer:p-3 drawer:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="tuning-footer">
           <button
             type="button"
             onClick={() => navigate(`/booking?build=${encodeConfig(config)}`)}
