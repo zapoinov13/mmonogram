@@ -1,4 +1,4 @@
-import { Component, Suspense, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { Component, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -132,7 +132,7 @@ function Parts({
   goldSteering?: boolean;
   replaceWheelFaces?: boolean;
 }) {
-  const { scene } = useGLTF(url, DRACO_PATH);
+  const { scene } = useGLTF(`${url}?v=20260913-cabin`, DRACO_PATH);
 
   const prepared = useMemo(() => {
     const root = scene.clone(true);
@@ -282,7 +282,7 @@ export default function GClassGLTF({
   /* Лёгкий набор по умолчанию, CAD — по ?hq=1. См. carFiles() в models.ts. */
   const files = useMemo(() => carFiles(car), [car]);
   const cadInterior = files.interior === CAD_INTERIOR_URL;
-  const body = useGLTF(files.body, DRACO_PATH);
+  const body = useGLTF(`${files.body}?v=20260913-cabin`, DRACO_PATH);
   const fit = useMemo(() => computeFit(body.scene.clone(true), car.length), [body.scene, car.length]);
   const [steeringReady, setSteeringReady] = useState(false);
   const reportSteeringReady = useCallback(() => setSteeringReady(true), []);
@@ -466,9 +466,8 @@ export default function GClassGLTF({
     setGrounds((prev) => (prev[url] === minY ? prev : { ...prev, [url]: minY }));
   }, []);
 
-  // Load the exterior first unless the current view is already inside the cabin.
-  const exteriorLoaded = !files.kit || !config.kit || grounds[files.kit] !== undefined;
-  const showInterior = interiorVisible || exteriorLoaded;
+  // Prepare the complete cabin before revealing the assembly.
+  const showInterior = true;
 
   const groundOffset = useMemo(() => {
     const active = Object.entries(grounds).filter(([url]) => {
@@ -521,7 +520,6 @@ export default function GClassGLTF({
 
       {showInterior && files.interior && (
         <OptionalBoundary label="интерьер">
-          <Suspense fallback={null}>
             <Parts
               url={files.interior}
               fit={fit}
@@ -529,39 +527,30 @@ export default function GClassGLTF({
               materials={materials}
               hideBox={interiorSteeringMask}
             />
-          </Suspense>
         </OptionalBoundary>
       )}
 
       {showInterior && cadInterior && car.files.interior && (
         <OptionalBoundary label="отделка CAD-салона">
-          <Suspense fallback={null}>
             <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
-          </Suspense>
         </OptionalBoundary>
       )}
 
       {showInterior && cadInterior && (
         <OptionalBoundary label="центральная часть руля">
-          <Suspense fallback={null}>
             <Parts url={CAD_STEERING_CENTER_URL} fit={fit} kind="interior" materials={materials} />
-          </Suspense>
         </OptionalBoundary>
       )}
 
       {showInterior && cadInterior && (
         <OptionalBoundary label="кнопки и отделка руля">
-          <Suspense fallback={null}>
             <Parts url={CAD_STEERING_CONTROLS_URL} fit={fit} kind="interior" materials={materials} />
-          </Suspense>
         </OptionalBoundary>
       )}
 
       {showInterior && files.steering && (
         <OptionalBoundary label="руль">
-          <Suspense fallback={null}>
             <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} goldSteering={cadInterior} />
-          </Suspense>
         </OptionalBoundary>
       )}
     </group>
@@ -573,5 +562,5 @@ export default function GClassGLTF({
    публичном списке, — лишние 1.9 МБ на каждом заходе. */
 {
   const files = carFiles(CARS[DEFAULT_CAR]);
-  useGLTF.preload(files.body, DRACO_PATH);
+  useGLTF.preload(`${files.body}?v=20260913-cabin`, DRACO_PATH);
 }
