@@ -1,3 +1,5 @@
+import ugogbuzuoCertificate from "@/assets/partners/ugogbuzuo-partnership-certificate.webp";
+
 export interface RepresentativeSocials {
   instagram?: string;
   whatsapp?: string;
@@ -40,6 +42,10 @@ export interface Representative {
   certificate?: RepresentativeCertificate;
 }
 
+/**
+ * Каналы самого ателье. Их видят представительства, у которых своих ещё нет:
+ * лучше отправить человека в Дубай, чем показать страницу без единой кнопки.
+ */
 export const DEFAULT_SOCIALS: RepresentativeSocials = {
   instagram: "https://www.instagram.com/metagarage_m_monogram/?igsh=MTBtejVmOGdzYW5jMQ%3D%3D",
   whatsapp: "971545077707",
@@ -48,12 +54,29 @@ export const DEFAULT_SOCIALS: RepresentativeSocials = {
 export const getRepresentativeTimezone = (rep: Representative) =>
   rep.timezone ?? "Europe/Zurich";
 
-export const getRepresentativeSocials = (rep: Representative): RepresentativeSocials => ({
-  ...DEFAULT_SOCIALS,
-  ...(rep.socials ?? {}),
-});
+/**
+ * Свои каналы представительства заменяют дубайские целиком, а не дополняют их.
+ *
+ * Раньше списки сливались, и у партнёра с собственным Instagram кнопка
+ * «Написать в WhatsApp» всё равно вела на дубайский номер ателье: человек
+ * открывал страницу нигерийского дилера и попадал в переписку с другой
+ * компанией на другом континенте. Если представительство завело свои контакты,
+ * значит, общаться нужно с ним.
+ */
+export const getRepresentativeSocials = (rep: Representative): RepresentativeSocials =>
+  rep.socials ?? DEFAULT_SOCIALS;
 
-import ugogbuzuoCertificate from "@/assets/partners/ugogbuzuo-partnership-certificate.webp";
+/**
+ * Телефон для ссылки `tel:` — только плюс и цифры.
+ *
+ * Номера записаны так, как их пишет сам представитель, а нигерийцы пишут
+ * «+234 (0) 809 2997 000». Ноль в скобках — внутренняя приставка для звонков
+ * по стране, вместе с кодом +234 он не набирается. Оставить его в ссылке —
+ * значит отдать телефону номер, по которому не дозвониться, поэтому скобочная
+ * группа выбрасывается целиком, а не просто чистятся пробелы.
+ */
+export const telHref = (phone: string) =>
+  `tel:${phone.replace(/\(\d+\)/g, "").replace(/[^\d+]/g, "")}`;
 
 export const representatives: Representative[] = [
   {
@@ -105,6 +128,7 @@ export const representatives: Representative[] = [
     services: ["GCC Spec Vehicles", "Exterior", "Interior", "Forged Wheels"],
     socials: {
       instagram: "https://www.instagram.com/ugogbuzuoautoltd/",
+      whatsapp: "2348092997000",
       website: "https://ugoautosltd.com/",
       facebook: "https://www.facebook.com/ugogbuzuoautoltd/",
       youtube: "https://www.youtube.com/@ugoautostv1982",

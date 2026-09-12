@@ -29,6 +29,7 @@ import {
   getRepresentativeSocials,
   getRepresentativeTimezone,
   representatives,
+  telHref,
 } from "@/data/representatives";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { navigateToRepresentatives } from "@/lib/representativesNav";
@@ -383,7 +384,7 @@ const RepresentativeDetailPage = () => {
               <ul className="space-y-5 text-sm">
                 {[
                   { Icon: MapPin, label: t("representatives.address"), value: rep.address ?? t("representatives.addressFallback"), href: rep.address ? gMapsLink : undefined, external: true },
-                  { Icon: Phone, label: t("representatives.phone"), value: rep.phone ?? t("representatives.phoneFallback"), href: rep.phone ? `tel:${rep.phone.replace(/\s/g, "")}` : undefined },
+                  { Icon: Phone, label: t("representatives.phone"), value: rep.phone ?? t("representatives.phoneFallback"), href: rep.phone ? telHref(rep.phone) : undefined },
                   { Icon: Mail, label: t("representatives.email"), value: rep.email ?? "info@mmonogram.com", href: `mailto:${rep.email ?? "info@mmonogram.com"}` },
                   { Icon: Clock, label: t("representatives.hours"), value: rep.hours ?? t("representatives.hoursFallback"), href: undefined },
                 ].map(({ Icon, label, value, href, external }) => {
