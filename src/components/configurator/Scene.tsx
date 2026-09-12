@@ -9,6 +9,7 @@ import { CABIN_MID_X, CABIN_ROOF_Y } from "./cabin";
 import { anchorCabinCamera } from "./cabinCamera";
 import Showroom from "./Showroom";
 import { BuildConfig, isInteriorFocus, type CameraFocus } from "./config";
+import { getHeadlightAppearance } from "./headlights";
 
 export type { CameraFocus };
 
@@ -477,6 +478,7 @@ export default function ConfiguratorScene({
   const flightRef = useRef<FlightState | null>(null);
   const bg = config.night ? "#08090a" : "#111315";
   const enablePostEffects = !isMobile && !reducedMotion && !interior;
+  const headlight = getHeadlightAppearance(config.lights);
 
   return (
     <Canvas
@@ -564,7 +566,7 @@ export default function ConfiguratorScene({
             quality={isMobile ? "medium" : "high"}
             halfRes
           />
-          <Bloom intensity={0.11} luminanceThreshold={1.05} luminanceSmoothing={0.25} mipmapBlur />
+          <Bloom intensity={headlight.bloomIntensity} luminanceThreshold={0.9} luminanceSmoothing={0.3} mipmapBlur />
           <BrightnessContrast contrast={-0.01} />
           <HueSaturation saturation={-0.05} />
         </EffectComposer>}

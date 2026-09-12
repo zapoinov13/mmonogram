@@ -17,6 +17,7 @@ import CabinDetails from "./CabinDetails";
 import { goldCustomRole, goldSteeringRole } from "./goldInterior";
 import GoldRearScreens from "./GoldRearScreens";
 import { CAD_GRILLE_KIT_URL, hideReplacedGrilleFrame } from "./models";
+import { getHeadlightAppearance } from "./headlights";
 
 /**
  * Оцифрованная сборка G63 вместо процедурной заглушки.
@@ -42,6 +43,49 @@ const STEERING_WHEEL_SOURCE_BOX = new THREE.Box3(
   new THREE.Vector3(0.18, 0.94, -1.56),
   new THREE.Vector3(0.63, 1.39, -1.2),
 );
+
+const HEADLIGHT_Z = [-0.64, 0.64] as const;
+
+function HeadlightRig({ enabled }: { enabled: boolean }) {
+  const appearance = getHeadlightAppearance(enabled);
+  const targets = useMemo(
+    () => HEADLIGHT_Z.map((z) => {
+      const target = new THREE.Object3D();
+      target.position.set(7.8, 0.18, z);
+      return target;
+    }),
+    [],
+  );
+
+  if (!enabled) return null;
+
+  return (
+    <group>
+      {targets.map((target, index) => (
+        <group key={HEADLIGHT_Z[index]}>
+          <primitive object={target} />
+          <spotLight
+            position={[2.34, 0.88, HEADLIGHT_Z[index]]}
+            target={target}
+            angle={0.36}
+            penumbra={0.78}
+            intensity={appearance.beamIntensity}
+            distance={12}
+            decay={2}
+            color="#dcecff"
+          />
+          <pointLight
+            position={[2.38, 0.88, HEADLIGHT_Z[index]]}
+            intensity={0.9}
+            distance={1.25}
+            decay={2}
+            color="#e6f2ff"
+          />
+        </group>
+      ))}
+    </group>
+  );
+}
 
 function fitSourceBox(box: THREE.Box3, fit: Fit) {
   return box.clone().applyMatrix4(
@@ -252,6 +296,7 @@ export default function GClassGLTF({
     const finish = RIM_FINISHES[config.rimFinish];
     const grille = GRILLE_FINISHES[config.grille];
     const interior = INTERIOR_FINISHES[config.interior] ?? INTERIOR_FINISHES[0];
+    const headlight = getHeadlightAppearance(config.lights);
     return {
       body: new THREE.MeshPhysicalMaterial({
         color: paint.color,
@@ -287,14 +332,18 @@ export default function GClassGLTF({
         side: THREE.DoubleSide,
       }),
       taillight: new THREE.MeshStandardMaterial({
-        color: "#2a0707",
-        emissive: "#a11212",
-        emissiveIntensity: config.lights ? 1.4 : 0.2,
+        color: config.lights ? "#7d1014" : "#270609",
+        emissive: config.lights ? "#d31d28" : "#000000",
+        emissiveIntensity: config.lights ? 2.4 : 0,
+        roughness: 0.3,
       }),
       light: new THREE.MeshStandardMaterial({
-        color: "#f2f4f6",
-        emissive: "#dfe8ff",
-        emissiveIntensity: config.lights ? 1.6 : 0.05,
+        color: headlight.lensColor,
+        emissive: headlight.emissive,
+        emissiveIntensity: headlight.emissiveIntensity,
+        metalness: 0.08,
+        roughness: config.lights ? 0.12 : 0.3,
+        toneMapped: !config.lights,
       }),
       /* Решётка, кант по борту и вставки порогов идут одной отделкой. Золото
          по умолчанию: на g3-iconic-gold-front.jpg весь декоративный металл
@@ -428,6 +477,7 @@ export default function GClassGLTF({
 
   return (
     <group position-y={groundOffset}>
+      <HeadlightRig enabled={config.lights} />
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
         <CabinDetails night={config.night} interior={config.interior} instrumentsOnly={files.interior === CAD_INTERIOR_URL} />
         {cadInterior && <GoldRearScreens />}
