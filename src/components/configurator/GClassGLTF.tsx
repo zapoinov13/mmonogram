@@ -201,6 +201,12 @@ function Parts({
       const dashAtMax = cabinDashAtMax(kept.map((k) => k.box), cabin);
       for (const { mesh, box } of kept) {
         const role = goldSteering ? goldSteeringRole(mesh.name) : goldTrim ? goldCustomRole(mesh.name) : undefined;
+        // The custom file also contains a second dashboard and console.
+        // Only explicitly mapped upholstery belongs over the CAD assembly.
+        if (goldTrim && !role) {
+          mesh.visible = false;
+          continue;
+        }
         byRole[role ?? classifyCabin(box, cabin, dashAtMax)].push(mesh);
       }
     } else {
@@ -426,8 +432,8 @@ export default function GClassGLTF({
         side: THREE.DoubleSide,
         color: "#0b0b0c",
         metalness: cadInterior ? 0.15 : 0.5,
-        roughness: cadInterior ? 0.21 : 0.14,
-        envMapIntensity: cadInterior ? 0.28 : 0.4,
+        roughness: cadInterior ? 0.36 : 0.14,
+        envMapIntensity: cadInterior ? 0.16 : 0.4,
       }),
       cabinDisplay: new THREE.MeshPhysicalMaterial({
         color: "#050607",
@@ -444,9 +450,9 @@ export default function GClassGLTF({
       cabinMetal: new THREE.MeshStandardMaterial({
         side: THREE.DoubleSide,
         color: grille.color,
-        metalness: 1,
-        roughness: Math.max(grille.roughness, 0.3),
-        envMapIntensity: 0.55,
+        metalness: 0.82,
+        roughness: Math.max(grille.roughness, 0.48),
+        envMapIntensity: 0.3,
       }),
       cabinFloor: new THREE.MeshStandardMaterial({ color: "#0e0c0c", metalness: 0, roughness: 0.96, envMapIntensity: 0.05 }),
       cabinRoof: new THREE.MeshStandardMaterial({ color: "#141312", metalness: 0, roughness: 0.9, envMapIntensity: 0.05 }),
@@ -492,7 +498,7 @@ export default function GClassGLTF({
         <ForgedWheelSet design={config.rim} finish={config.rimFinish} caliper={config.caliper} />
       )}
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
-        <CabinDetails night={config.night} interior={config.interior} instrumentsOnly={files.interior === CAD_INTERIOR_URL} />
+        {!cadInterior && <CabinDetails night={config.night} interior={config.interior} />}
         {cadInterior && <GoldRearScreens />}
       </group>
       <Parts
