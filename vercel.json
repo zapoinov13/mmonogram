@@ -27,7 +27,16 @@
       ]
     },
     {
-      "source": "/(models|draco|fonts|videos|maps)/(.*)",
+      "source": "/models/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(draco|fonts|videos|maps)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
