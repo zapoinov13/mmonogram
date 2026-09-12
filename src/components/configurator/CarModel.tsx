@@ -42,7 +42,7 @@ class ModelBoundary extends Component<{ children: ReactNode; fallback: ReactNode
 }
 
 /* Сигнал «машина в кадре»: монтируется только после того, как Suspense
-   отпустил, то есть базовый кузов уже собран. По нему страница убирает
+   отпустил, то есть кузов, обвес и колёса уже собраны. По нему страница убирает
    заставку, а камера начинает интро-наезд — до этого наезжать не на что. */
 function ReadySignal({ onReady }: { onReady?: () => void }) {
   useEffect(() => {

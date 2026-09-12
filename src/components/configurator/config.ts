@@ -42,7 +42,7 @@ export const PAINTS: PaintOption[] = [
 
 export const RIM_DESIGNS: RimDesign[] = [
   { id: "monoblock", name: "MG.1 Monoblock" },
-  { id: "multispoke", name: "MG.7 Multi-Spoke" },
+  { id: "multispoke", name: "ICONIC Original" },
   { id: "crossspoke", name: "MG.9 Cross-Spoke" },
   { id: "turbine", name: "MG.11 Turbine" },
   { id: "disc", name: "MG.12 Aero Disc" },

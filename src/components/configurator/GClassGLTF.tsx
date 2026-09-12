@@ -285,8 +285,6 @@ export default function GClassGLTF({
   const body = useGLTF(files.body, DRACO_PATH);
   const fit = useMemo(() => computeFit(body.scene.clone(true), car.length), [body.scene, car.length]);
   const [steeringReady, setSteeringReady] = useState(false);
-  const [kitReady, setKitReady] = useState(false);
-  const reportKitReady = useCallback(() => setKitReady(true), []);
   const reportSteeringReady = useCallback(() => setSteeringReady(true), []);
   const interiorSteeringMask = useMemo(
     () => (steeringReady && files.interior && files.steering ? fitSourceBox(STEERING_WHEEL_SOURCE_BOX, fit) : undefined),
@@ -465,9 +463,7 @@ export default function GClassGLTF({
    */
   const [grounds, setGrounds] = useState<Record<string, number>>({});
   const reportGround = useCallback((url: string, minY: number) => {
-    window.setTimeout(() => {
-      setGrounds((prev) => (prev[url] === minY ? prev : { ...prev, [url]: minY }));
-    }, 0);
+    setGrounds((prev) => (prev[url] === minY ? prev : { ...prev, [url]: minY }));
   }, []);
 
   // Load the exterior first unless the current view is already inside the cabin.
@@ -493,7 +489,7 @@ export default function GClassGLTF({
   return (
     <group position-y={groundOffset}>
       <HeadlightRig enabled={config.lights} />
-      {config.kit && kitReady && (
+      {config.kit && files.kit && config.rim !== 1 && (
         <ForgedWheelSet design={config.rim} finish={config.rimFinish} caliper={config.caliper} />
       )}
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
@@ -506,28 +502,21 @@ export default function GClassGLTF({
         kind="exterior"
         materials={materials}
         sourceMaterials={car.sourceMaterials}
-        hideWheels={config.kit && kitReady}
-        hideGrilleFrame={config.kit && kitReady}
+        hideWheels={config.kit && !!files.kit}
+        hideGrilleFrame={config.kit && !!files.kit}
         onGround={reportGround}
       />
 
-      {/* Обвес и салон у машины может не быть — тогда собирается из того, что есть.
-          CAD-файлы тяжёлые, поэтому кузов не ждёт дополнительные части: сцена
-          становится интерактивной раньше, а детали догружаются без блокировки. */}
+      {/* Share CarModel's Suspense boundary so the first frame includes tires and wheels. */}
       {files.kit && config.kit && (
-        <OptionalBoundary label="обвес и колёса">
-          <Suspense fallback={null}>
             <Parts
               url={files.kit}
               fit={fit}
               kind="exterior"
               materials={materials}
               onGround={reportGround}
-              onLoaded={reportKitReady}
-              replaceWheelFaces
+              replaceWheelFaces={config.rim !== 1}
             />
-          </Suspense>
-        </OptionalBoundary>
       )}
 
       {showInterior && files.interior && (

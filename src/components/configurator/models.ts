@@ -108,8 +108,8 @@ export const CARS: Record<CarId, CarModel> = {
 export function carFiles(car: CarModel): CarFiles {
   if (typeof window === "undefined") return car.files;
   const params = new URLSearchParams(window.location.search);
-  // CAD comparison uses the lightweight body; the renderer adds custom trim.
-  if (params.get("cad") === "1") return { ...car.files, body: CAD_BODY_URL, kit: CAD_GRILLE_KIT_URL, interior: CAD_INTERIOR_URL };
+  // Use the complete CAD assembly for normal navigation, including links without cad=1.
+  if (!params.has("hq") && params.get("cad") !== "0") return { ...car.files, body: CAD_BODY_URL, kit: CAD_GRILLE_KIT_URL, interior: CAD_INTERIOR_URL };
   const hq = params.has("hq");
   return hq && car.filesHq ? car.filesHq : car.files;
 }
