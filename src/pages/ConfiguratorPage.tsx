@@ -268,6 +268,8 @@ const ConfiguratorPage = () => {
   const [sceneReady, setSceneReady] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const tuningTriggerRef = useRef<HTMLButtonElement>(null);
+  const tuningCloseRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { optionsRef.current?.scrollTo({ top: 0 }); }, [activeSection]);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -341,6 +343,16 @@ const ConfiguratorPage = () => {
     [changeFocus]
   );
 
+  const openTuning = useCallback(() => {
+    setTuningOpen(true);
+    window.requestAnimationFrame(() => tuningCloseRef.current?.focus());
+  }, []);
+
+  const closeTuning = useCallback(() => {
+    setTuningOpen(false);
+    window.requestAnimationFrame(() => tuningTriggerRef.current?.focus());
+  }, []);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
@@ -348,11 +360,11 @@ const ConfiguratorPage = () => {
   useEffect(() => {
     if (!tuningOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTuningOpen(false);
+      if (e.key === "Escape") closeTuning();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tuningOpen]);
+  }, [closeTuning, tuningOpen]);
 
   /* Панель не размонтируем — она уезжает трансформом, чтобы открываться без
      пересборки списка. Закрытую надо убрать из фокуса и из дерева доступности,
@@ -801,8 +813,9 @@ const ConfiguratorPage = () => {
           )}
         >
           <button
+            ref={tuningTriggerRef}
             type="button"
-            onClick={() => setTuningOpen(true)}
+            onClick={openTuning}
             aria-expanded={tuningOpen}
             aria-controls="tuning-panel"
             tabIndex={tuningOpen ? -1 : undefined}
@@ -848,8 +861,9 @@ const ConfiguratorPage = () => {
               <RotateCcw className="h-4 w-4" />
             </button>
             <button
+              ref={tuningCloseRef}
               type="button"
-              onClick={() => setTuningOpen(false)}
+              onClick={closeTuning}
               aria-label="Close tuning"
               className="-mr-1 flex h-10 w-10 items-center justify-center rounded-md text-white/60 transition-colors hover:bg-white/10 hover:text-white md:h-8 md:w-8"
             >
@@ -1027,16 +1041,17 @@ const ConfiguratorPage = () => {
           <button
             type="button"
             onClick={() => navigate(`/booking?build=${encodeConfig(config)}`)}
-            className="flex h-11 flex-1 items-center justify-center rounded-md bg-white font-body text-[11px] uppercase tracking-[0.18em] text-black transition-colors hover:bg-white/90"
+            className="tuning-order-button"
           >
-            Request this build
+            <span>Request this build</span>
+            <small>{formatPrice(price)}</small>
           </button>
           <button
             type="button"
             onClick={handleSave}
             aria-label={config.saved ? "Saved car" : "Save car"}
             title={config.saved ? "Saved car" : "Save car"}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/80 transition-colors hover:border-white/35 hover:bg-white/[0.09] hover:text-white"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/80 transition-colors hover:border-white/35 hover:bg-white/[0.09] hover:text-white"
           >
             {savedFlash || config.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           </button>
