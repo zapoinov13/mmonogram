@@ -21,11 +21,22 @@ function instrumentTexture() {
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#080d12";
   ctx.fillRect(0, 0, 1024, 256);
+  const sheen = ctx.createLinearGradient(0, 0, 0, 256);
+  sheen.addColorStop(0, "rgba(120,155,180,.16)");
+  sheen.addColorStop(0.35, "rgba(25,34,43,.06)");
+  sheen.addColorStop(1, "rgba(0,0,0,.24)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(0, 0, 1024, 256);
   for (const x of [155, 405]) {
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#8eabb5";
     ctx.beginPath();
     ctx.arc(x, 132, 86, Math.PI * 0.75, Math.PI * 2.25);
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#4b5962";
+    ctx.beginPath();
+    ctx.arc(x, 132, 67, 0, Math.PI * 2);
     ctx.stroke();
     ctx.strokeStyle = "#f0ede5";
     for (let i = 0; i < 13; i++) {
@@ -52,6 +63,15 @@ function instrumentTexture() {
   ctx.fillStyle = "#b5c1c8";
   ctx.font = "18px sans-serif";
   ctx.fillText("ICONIC", 595, 108);
+  ctx.strokeStyle = "#9a8053";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(595, 133);
+  ctx.lineTo(938, 133);
+  ctx.stroke();
+  ctx.fillStyle = "#71808a";
+  ctx.font = "16px sans-serif";
+  ctx.fillText("DUBAI  ·  STUDIO", 595, 166);
   ctx.fillText("22.0 C", 595, 203);
   ctx.fillText("22.0 C", 863, 203);
   const texture = new THREE.CanvasTexture(canvas);
@@ -63,8 +83,6 @@ export default function CabinDetails({ night, interior, instrumentsOnly = false 
   const display = useMemo(instrumentTexture, []);
   const finish = INTERIOR_FINISHES[interior] ?? INTERIOR_FINISHES[0];
   useEffect(() => () => display.dispose(), [display]);
-  // Gold Package references show the original dark display, not invented gauges.
-  if (instrumentsOnly) return null;
   const instruments = (
     <group>
       {!instrumentsOnly && (
@@ -77,15 +95,37 @@ export default function CabinDetails({ night, interior, instrumentsOnly = false 
           <meshStandardMaterial color={finish.primary} roughness={0.75} />
         </RoundedBox>
       )}
+      {instrumentsOnly && (
+        <RoundedBox position={[0.18, 1.19, -1.145]} args={[0.91, 0.185, 0.028]} radius={0.015} smoothness={3}>
+          <meshStandardMaterial color="#050607" metalness={0.12} roughness={0.22} />
+        </RoundedBox>
+      )}
       <mesh
-        position={instrumentsOnly ? [0.22, 1.183, -1.155] : [0.24, 1.315, -1.174]}
-        rotation={[instrumentsOnly ? -0.28 : 0, Math.PI, 0]}
+        position={instrumentsOnly ? [0.18, 1.19, -1.162] : [0.24, 1.315, -1.174]}
+        rotation={[0, Math.PI, 0]}
       >
-        <planeGeometry args={instrumentsOnly ? [0.65, 0.113] : [0.84, 0.21]} />
+        <planeGeometry args={instrumentsOnly ? [0.88, 0.166] : [0.84, 0.21]} />
         <meshBasicMaterial map={display} toneMapped={false} />
       </mesh>
     </group>
   );
+
+  if (instrumentsOnly) {
+    return (
+      <group>
+        {instruments}
+        <mesh position={[0.18, 1.085, -1.17]}>
+          <boxGeometry args={[0.92, 0.007, 0.008]} />
+          <meshStandardMaterial color="#c7a461" emissive="#8d6835" emissiveIntensity={night ? 1.4 : 0.55} />
+        </mesh>
+        {[-0.12, -0.04, 0.04, 0.12].map((x) => (
+          <RoundedBox key={x} position={[x, 1.055, -1.18]} args={[0.052, 0.018, 0.016]} radius={0.004} smoothness={2}>
+            <meshStandardMaterial color="#b5aa96" metalness={0.8} roughness={0.34} />
+          </RoundedBox>
+        ))}
+      </group>
+    );
+  }
   return (
     <group>
       {[-0.395, 0.395].map((x) => (
