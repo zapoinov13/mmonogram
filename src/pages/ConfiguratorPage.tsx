@@ -29,11 +29,13 @@ import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   BuildConfig,
+  CALIPER_FINISHES,
   DEFAULT_CONFIG,
   GRILLE_FINISHES,
   INTERIOR_FINISHES,
   KIT_PACKAGES,
   PAINTS,
+  RIM_DESIGNS,
   RIM_FINISHES,
   SIGNATURE_BUILDS,
   decodeConfig,
@@ -150,6 +152,37 @@ function PaintChip({ color }: { color: string }) {
     <span className={`relative block overflow-hidden ${TILE}`} style={{ backgroundColor: color }}>
       <span className="absolute inset-0 bg-gradient-to-b from-white/22 via-transparent to-black/35" />
       <span className="absolute inset-x-0 top-[18%] h-[14%] bg-white/12 blur-[2px]" />
+    </span>
+  );
+}
+
+function WheelDesignChip({ design }: { design: number }) {
+  const spokes = [8, 12, 10, 18, 12][design] ?? 12;
+  const paired = design === 1;
+  const angles = Array.from({ length: spokes }, (_, index) => (index / spokes) * 360);
+  return (
+    <span className={`relative grid place-items-center overflow-hidden ${TILE}`}>
+      <svg viewBox="0 0 76 48" className="h-full w-full" aria-hidden>
+        <rect width="76" height="48" fill="#111214" />
+        <circle cx="38" cy="24" r="19" fill="#08090a" stroke="#4b4d50" strokeWidth="2" />
+        <circle cx="38" cy="24" r="15.5" fill={design === 4 ? "#292b2e" : "#15171a"} stroke="#b9a16f" strokeWidth="1.2" />
+        {angles.flatMap((angle, index) => {
+          const offsets = paired ? [-2.5, 2.5] : [0];
+          return offsets.map((offset) => (
+            <line
+              key={`${index}-${offset}`}
+              x1="38"
+              y1="24"
+              x2="52"
+              y2="24"
+              stroke="#d6d8da"
+              strokeWidth={design === 0 ? 2.4 : 1.3}
+              transform={`rotate(${angle + offset + (design === 3 ? 12 : 0)} 38 24)`}
+            />
+          ));
+        })}
+        <circle cx="38" cy="24" r="4.2" fill="#090a0b" stroke="#d7bd82" strokeWidth="1.2" />
+      </svg>
     </span>
   );
 }
@@ -498,7 +531,7 @@ const ConfiguratorPage = () => {
          с единственной моделью занимала место и выглядела недоделкой. */
       { id: "signature" as const, label: "Signature", value: signature?.name ?? "Custom", icon: Sparkles },
       { id: "exterior" as const, label: t("config.exterior"), value: PAINTS[config.paint].name, icon: Palette },
-      { id: "wheels" as const, label: t("config.rims"), value: RIM_FINISHES[config.rimFinish].name, icon: Disc3 },
+      { id: "wheels" as const, label: t("config.rims"), value: `${RIM_DESIGNS[config.rim].name} · ${RIM_FINISHES[config.rimFinish].name}`, icon: Disc3 },
       /* Раздела «Body Kit» в списке нет: пакет остался один, и вкладка с
          единственной несменяемой строкой — то же самое, что вкладка выбора
          машины при одной машине. Обвес показан в Overview. */
@@ -1007,6 +1040,51 @@ const ConfiguratorPage = () => {
                   <span>{t("config.lights")}<small>{config.lights ? t("config.lightsOn") : t("config.lightsOff")}</small></span>
                   <button type="button" role="switch" aria-checked={config.lights} aria-label={t("config.lights")}
                     className="tuning-switch" onClick={() => set({ lights: !config.lights })}><span /></button>
+                </div>
+              ) : activeSection === "wheels" ? (
+                <div className="tuning-wheel-controls">
+                  <section>
+                    <h3>Wheel Design</h3>
+                    <div className="tuning-option-grid">
+                      {RIM_DESIGNS.map((design, index) => (
+                        <OptionCard
+                          key={design.id}
+                          selected={config.rim === index}
+                          onClick={() => set({ rim: index })}
+                          title={design.name}
+                          preview={<WheelDesignChip design={index} />}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                  <section>
+                    <h3>Wheel Finish</h3>
+                    <div className="tuning-option-grid">
+                      {RIM_FINISHES.map((finish, index) => (
+                        <OptionCard
+                          key={finish.id}
+                          selected={config.rimFinish === index}
+                          onClick={() => set({ rimFinish: index })}
+                          title={finish.name}
+                          preview={<PaintChip color={finish.color} />}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                  <section>
+                    <h3>Brake Calipers</h3>
+                    <div className="tuning-option-grid">
+                      {CALIPER_FINISHES.map((finish, index) => (
+                        <OptionCard
+                          key={finish.id}
+                          selected={config.caliper === index}
+                          onClick={() => set({ caliper: index })}
+                          title={finish.name}
+                          preview={<PaintChip color={finish.color} />}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 </div>
               ) : (
                 <>

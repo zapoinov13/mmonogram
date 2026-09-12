@@ -18,6 +18,7 @@ import { goldCustomRole, goldSteeringRole } from "./goldInterior";
 import GoldRearScreens from "./GoldRearScreens";
 import { CAD_GRILLE_KIT_URL, hideReplacedGrilleFrame } from "./models";
 import { getHeadlightAppearance } from "./headlights";
+import ForgedWheelSet from "./ForgedWheelSet";
 
 /**
  * Оцифрованная сборка G63 вместо процедурной заглушки.
@@ -112,6 +113,7 @@ function Parts({
   hideGrilleFrame = false,
   goldTrim = false,
   goldSteering = false,
+  replaceWheelFaces = false,
 }: {
   url: string;
   fit?: Fit;
@@ -128,6 +130,7 @@ function Parts({
   hideGrilleFrame?: boolean;
   goldTrim?: boolean;
   goldSteering?: boolean;
+  replaceWheelFaces?: boolean;
 }) {
   const { scene } = useGLTF(url, DRACO_PATH);
 
@@ -205,20 +208,32 @@ function Parts({
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = classifyPart(describeMaterial(source), box, fit.carSize, mesh.name);
         const grille = url === CAD_GRILLE_KIT_URL && /chrome_V3|grill__|решетк/i.test(mesh.name);
-        byRole[grille && role === "brightwork" ? "grilleMetal" : role].push(mesh);
+        const finalRole = grille && role === "brightwork" ? "grilleMetal" : role;
+        if (replaceWheelFaces && (finalRole === "wheel" || finalRole === "wheelAccent")) {
+          mesh.visible = false;
+        }
+        byRole[finalRole].push(mesh);
       }
     }
 
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("parts")) {
       for (const [role, meshes] of Object.entries(byRole)) {
         if (meshes.length) {
-          console.info(`[${url.split("/").pop()}] ${role}:`, meshes.map((m) => m.name).join(", "));
+          console.info(
+            `[${url.split("/").pop()}] ${role}:`,
+            meshes.map((mesh) => {
+              const box = new THREE.Box3().setFromObject(mesh);
+              const center = box.getCenter(new THREE.Vector3());
+              const size = box.getSize(new THREE.Vector3());
+              return `${mesh.name} @ ${center.toArray().map((value) => value.toFixed(2)).join("/")} [${size.toArray().map((value) => value.toFixed(2)).join("/")}]`;
+            }).join(", "),
+          );
         }
       }
     }
 
     return { root, byRole, fit, minY: new THREE.Box3().setFromObject(root).min.y };
-  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, hideGrilleFrame, goldTrim, goldSteering]);
+  }, [scene, shared, kind, url, sourceMaterials, hideBox, hideWheels, hideGrilleFrame, goldTrim, goldSteering, replaceWheelFaces]);
 
   useLayoutEffect(() => {
     onGround?.(url, prepared.minY);
@@ -478,6 +493,9 @@ export default function GClassGLTF({
   return (
     <group position-y={groundOffset}>
       <HeadlightRig enabled={config.lights} />
+      {config.kit && kitReady && (
+        <ForgedWheelSet design={config.rim} finish={config.rimFinish} caliper={config.caliper} />
+      )}
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
         <CabinDetails night={config.night} interior={config.interior} instrumentsOnly={files.interior === CAD_INTERIOR_URL} />
         {cadInterior && <GoldRearScreens />}
@@ -506,6 +524,7 @@ export default function GClassGLTF({
               materials={materials}
               onGround={reportGround}
               onLoaded={reportKitReady}
+              replaceWheelFaces
             />
           </Suspense>
         </OptionalBoundary>
