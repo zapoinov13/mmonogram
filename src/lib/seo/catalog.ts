@@ -93,7 +93,7 @@ export const STATIC_PAGES: Record<string, PageSeo> = {
   "/contact": {
     title: "Contact the Dubai Atelier | M Monogram",
     description:
-      "Reach M Monogram in Dubai by phone, WhatsApp or email, and find the representatives covering Germany, France, Monaco, Switzerland and Hungary.",
+      "Reach M Monogram in Dubai by phone, WhatsApp or email, and find the representatives covering Germany, France, Monaco, Switzerland, Hungary and Nigeria.",
     keywords: merge(BRAND, PLACE, ["contact car atelier Dubai"]),
     changefreq: "monthly",
     priority: 0.8,
@@ -264,6 +264,10 @@ export const REP_PAGES: Record<string, PageSeo> = {
   "france-monaco": rep(
     "France & Monaco",
     "The M Monogram representative for France and Monaco: local viewings, commissions and delivery of cars built by the Dubai atelier."
+  ),
+  nigeria: rep(
+    "Nigeria",
+    "Ugogbuzuo Auto Link Ltd, Enugu — the M Monogram representative for Nigeria and West Africa: GCC spec vehicles, local viewings and delivery from Dubai."
   ),
 };
 

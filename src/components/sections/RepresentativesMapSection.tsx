@@ -8,11 +8,21 @@ import MediaEdgeFade from "@/components/MediaEdgeFade";
 
 const GEO_URL = "/maps/countries-110m.json";
 
-const LABEL_OFFSET: Record<string, string> = {
-  "switzerland-hungary": "translate(-10, -6)",
-  germany: "translate(8, -6)",
-  "france-monaco": "translate(8, 14)",
+/**
+ * Куда отвести подпись от точки и с какой стороны её якорить. Цюрих, Мюнхен и
+ * Ницца в этом масштабе стоят в тридцати пикселях друг от друга, поэтому их
+ * подписи разведены веером: Мюнхен вправо, Цюрих и Ницца влево и вниз — иначе
+ * три слова ложатся друг на друга. Энугу стоит особняком, ему хватает
+ * обычного отступа вправо.
+ */
+const LABEL: Record<string, { offset: string; anchor: "start" | "end" }> = {
+  "switzerland-hungary": { offset: "translate(-9, -1)", anchor: "end" },
+  germany: { offset: "translate(9, -5)", anchor: "start" },
+  "france-monaco": { offset: "translate(-9, 10)", anchor: "end" },
+  nigeria: { offset: "translate(9, -5)", anchor: "start" },
 };
+
+const DEFAULT_LABEL = { offset: "translate(8, -5)", anchor: "start" } as const;
 
 const GEO_STYLE = {
   default: {
@@ -106,11 +116,11 @@ const MapMarkers = memo(function MapMarkers({
                 strokeWidth={1.15}
                 style={{ pointerEvents: "none" }}
               />
-              <g transform={LABEL_OFFSET[rep.id] ?? "translate(8, -5)"}>
+              <g transform={(LABEL[rep.id] ?? DEFAULT_LABEL).offset}>
                 <text
                   x={0}
                   y={0}
-                  textAnchor={rep.id === "switzerland-hungary" ? "end" : "start"}
+                  textAnchor={(LABEL[rep.id] ?? DEFAULT_LABEL).anchor}
                   fill="hsl(0 0% 100%)"
                   fillOpacity={isActive ? 1 : 0.72}
                   fontSize={isActive ? 8.2 : 7.4}
@@ -289,12 +299,13 @@ const RepresentativesMapSection = () => {
                   projection="geoEqualEarth"
                   width={800}
                   height={450}
-                  /* Масштаб 760 показывал пол-Африки и Ближний Восток, а три
-                     точки сидели крошечным пятном в углу. На 2600 в кадре
-                     Швейцария, восток Франции, юг Германии и север Италии:
-                     страны узнаются, а Цюрих, Мюнхен и Ницца разнесены по полю,
-                     а не слипаются в одну точку. */
-                  projectionConfig={{ scale: 2600, center: [8.6, 46.2] }}
+                  /* Кадр держит сразу европейскую тройку и Энугу: от 48° с.ш.
+                     до 6° с.ш. — сорок два градуса по широте. Прежние 2600 с
+                     центром на Альпах оставляли Нигерию далеко за нижним краем
+                     карты, а её точку — за пределами холста. На 390 с центром
+                     [9.5, 26] обе группы стоят внутри поля с запасом около
+                     семидесяти пикселей сверху и снизу. */
+                  projectionConfig={{ scale: 390, center: [9.5, 26] }}
                   style={{ width: "100%", height: "100%", display: "block" }}
                 >
                   <defs>

@@ -17,8 +17,12 @@ import {
   Navigation,
   Star,
   Check,
+  Facebook,
+  Youtube,
+  Award,
 } from "lucide-react";
 import Header from "@/components/Header";
+import Picture from "@/components/Picture";
 import SEOHead from "@/components/SEOHead";
 import {
   getRepresentativeById,
@@ -127,6 +131,8 @@ const RepresentativeDetailPage = () => {
   if (socials.instagram) socialLinks.push({ Icon: Instagram, label: t("representatives.followInstagram"), href: socials.instagram });
   if (socials.whatsapp) socialLinks.push({ Icon: MessageCircle, label: t("representatives.messageWhatsapp"), href: `https://wa.me/${socials.whatsapp}` });
   if (socials.telegram) socialLinks.push({ Icon: Send, label: t("representatives.writeTelegram"), href: `https://t.me/${socials.telegram}` });
+  if (socials.facebook) socialLinks.push({ Icon: Facebook, label: t("representatives.followFacebook"), href: socials.facebook });
+  if (socials.youtube) socialLinks.push({ Icon: Youtube, label: t("representatives.watchYoutube"), href: socials.youtube });
   if (socials.website) socialLinks.push({ Icon: Globe, label: t("representatives.visitWebsite"), href: socials.website });
 
   return (
@@ -269,6 +275,48 @@ const RepresentativeDetailPage = () => {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Certificate of partnership */}
+            {rep.certificate && (
+              <div
+                className="bg-slate-900/30 backdrop-blur-xl border border-white/10 p-5 sm:p-6"
+                style={{ boxShadow: "inset 0 0 30px rgba(255,255,255,0.02)" }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Award className="w-3.5 h-3.5 text-foreground/40" strokeWidth={1.5} />
+                  <span className="text-[10px] tracking-[0.3em] uppercase text-foreground/40">
+                    {t("representatives.certificate")}
+                  </span>
+                </div>
+                <a
+                  href={rep.certificate.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group mt-4 block overflow-hidden border border-white/10 hover:border-white/30 transition-colors"
+                >
+                  <Picture
+                    src={rep.certificate.image}
+                    alt={rep.certificate.alt}
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                    className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.015]"
+                  />
+                </a>
+                <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                  <div>
+                    <dt className="text-foreground/40 text-[10px] tracking-[0.25em] uppercase mb-1">
+                      {t("representatives.certificateIssuedBy")}
+                    </dt>
+                    <dd className="text-foreground/85 leading-relaxed">{rep.certificate.issuedBy}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-foreground/40 text-[10px] tracking-[0.25em] uppercase mb-1">
+                      {t("representatives.certificateIssued")}
+                    </dt>
+                    <dd className="text-foreground/85 leading-relaxed">{rep.certificate.issued}</dd>
+                  </div>
+                </dl>
               </div>
             )}
 
