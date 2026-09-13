@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_DASHBOARD_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -168,7 +168,11 @@ function Parts({
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
-      if (url === CAD_INTERIOR_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
+      if (url === CAD_INTERIOR_URL && /^(ita_mi|miko_ob|miko_mi)_/.test(mesh.name)) {
+        mesh.visible = false;
+        return;
+      }
+      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -542,6 +546,10 @@ export default function GClassGLTF({
         <OptionalBoundary label="отделка CAD-салона">
             <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
         </OptionalBoundary>
+      )}
+
+      {showInterior && cadInterior && (
+        <Parts url={CAD_CONSOLE_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && cadInterior && (

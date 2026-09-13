@@ -20,6 +20,7 @@ export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
 export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-original.glb`;
+export const CAD_CONSOLE_URL = `${MODEL_BASE}/console-original.glb`;
 
 /** The cleaned body and custom kit contain coincident outer grille frames.
  * Keep the body copy until the replacement is loaded. GLTFLoader sanitizes names. */
