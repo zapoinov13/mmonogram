@@ -22,6 +22,7 @@ export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.gl
 export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-original.glb`;
 export const CAD_CONSOLE_URL = `${MODEL_BASE}/console-original.glb`;
 export const CAD_INSTRUMENTS_URL = `${MODEL_BASE}/instruments-original.glb`;
+export const CAD_WHEELS_URL = `${MODEL_BASE}/wheels-original.glb`;
 
 /** The cleaned body and custom kit contain coincident outer grille frames.
  * Keep the body copy until the replacement is loaded. GLTFLoader sanitizes names. */
@@ -132,6 +133,7 @@ export type PartRole =
   | "wheelAccent" // спицы и турбина — красятся выбранной отделкой
   | "tire"      // покрышки
   | "glass"     // остекление
+  | "roofGlass"
   | "taillight" // красные рассеиватели фонарей
   | "light"     // светящиеся элементы фар
   | "brightwork"  // декоративный металл: у G63 Iconic он золотой, не хром
@@ -189,6 +191,8 @@ export const MATERIAL_RULES: ReadonlyArray<{ test: RegExp; role: PartRole }> = [
  * нельзя. Зато в имени каждого диска стоит разболтовка — 5x130 у G-Class.
  */
 export const MESH_RULES: ReadonlyArray<{ test: RegExp; role: PartRole }> = [
+  // The supplied stock body has a separate, small sliding roof glass panel.
+  { test: /^Group_64$/, role: "roofGlass" },
   { test: /\d+x\d+_ET\d+|_5x130_/i, role: "wheel" },
   // Корпус проверяется раньше самих диодов: в его имени есть и то и другое
   { test: /корпус/i, role: "brightwork" },
@@ -331,6 +335,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   steeringBlack: "#181818",
   tire: "#444444",
   glass: "#25d0c0",
+  roofGlass: "#145b67",
   taillight: "#ff2d2d",
   light: "#ffffff",
   brightwork: "#d9b25a",

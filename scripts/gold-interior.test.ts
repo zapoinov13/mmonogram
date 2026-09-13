@@ -12,7 +12,7 @@ for (const id of ["016", "018", "020", "033", "043", "053", "072", "111"]) {
   assert.equal(goldCustomRole(`${plane}${id}`), "cabinAccent", "cognac shell");
 }
 assert.equal(goldCustomRole("unknown"), undefined, "unknown geometry retains existing classification");
-for (const id of ["019", "045"]) {
+for (const id of ["013", "019", "025", "045", "055", "057"]) {
   assert.equal(goldCustomRole(`${plane}.${id}`), "cabinMetal", "original rear cabin emblem");
   assert.equal(goldCustomRole(`${plane}${id}`), "cabinMetal", "normalized rear cabin emblem");
 }

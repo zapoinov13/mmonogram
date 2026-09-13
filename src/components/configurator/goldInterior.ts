@@ -21,7 +21,7 @@ export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "
   if (plane && blackInserts.has(plane)) return "cabinLeather";
   if (plane && cognacShells.has(plane)) return "cabinAccent";
   if (plane === "021" || plane === "078" || plane === "073") return "cabinTrim";
-  if (plane === "019" || plane === "045" || plane === "046" || plane === "047") return "cabinMetal";
+  if (plane && ["013", "019", "025", "045", "046", "047", "055", "057"].includes(plane)) return "cabinMetal";
   if (/^\u041a\u0443\u0431\.?03[24]$/.test(name)) return "cabinTrim";
   if (/^\u041a\u0443\u0431\.?03[56]$/.test(name)) return "cabinAccent";
   if (/^\u0422\u0435\u0441\u0442\.?00[15]$/.test(name)) return "cabinLeather";

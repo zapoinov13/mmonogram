@@ -1,15 +1,15 @@
 import { Component, Suspense, useEffect, type ReactNode } from "react";
-import GClassModel from "./GClassModel";
+import { Html } from "@react-three/drei";
+import { RotateCcw } from "lucide-react";
 import GClassGLTF from "./GClassGLTF";
 import SceneLoader from "./SceneLoader";
 import { BuildConfig } from "./config";
-import { CARS, DEFAULT_CAR } from "./models";
 
 /**
  * Точка подключения машины в сцену.
  *
- * Оцифрованная сборка — единственное, что видит посетитель. Процедурная
- * заглушка осталась ровно на один случай: GLB не загрузились вовсе.
+ * Оцифрованная сборка — единственное, что видит посетитель. Ошибка GLB
+ * показывает повторную загрузку, а не другую машину или неполный салон.
  *
  * Во время загрузки её больше не показываем. Посетитель видел сначала грубую
  * процедурную машину, а секунды через три она подменялась настоящей — со
@@ -33,7 +33,7 @@ class ModelBoundary extends Component<{ children: ReactNode; fallback: ReactNode
   }
 
   componentDidCatch(error: Error) {
-    console.warn("3D-модели недоступны, показываю заглушку:", error.message);
+    console.error("Configurator model failed to load:", error.message);
   }
 
   render() {
@@ -60,18 +60,25 @@ export default function CarModel({
   doorsOpen?: boolean;
   onReady?: () => void;
 }) {
-  const car = CARS[config.model] ?? CARS[DEFAULT_CAR];
-  /* Заглушка тоже сообщает о готовности: иначе при недоступных GLB заставка
-     висела бы вечно поверх работающей сцены. */
+  /* Reveal the error state instead of leaving the intro over the retry action. */
   const broken = (
     <>
-      <GClassModel config={config} doorsOpen={doorsOpen && !!car.supportsOpenings} />
+      <Html fullscreen>
+        <div className="flex h-full items-center justify-center bg-black/90 px-6 text-center text-white">
+          <div role="alert" className="flex max-w-sm flex-col items-center gap-5">
+            <p className="font-display text-base">3D model could not be loaded</p>
+            <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-11 items-center gap-2 border border-white/30 px-5 py-3 text-sm hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> Reload model
+            </button>
+          </div>
+        </div>
+      </Html>
       <ReadySignal onReady={onReady} />
     </>
   );
 
   return (
-    <ModelBoundary fallback={broken}>
+    <ModelBoundary key={config.model} fallback={broken}>
       <Suspense fallback={<SceneLoader night={config.night} />}>
         <GClassGLTF config={config} interiorVisible={doorsOpen} />
         <ReadySignal onReady={onReady} />

@@ -5,11 +5,15 @@ import { CAD_BODY_URL, CAD_GRILLE_KIT_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER
 const car = CARS[DEFAULT_CAR];
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
 try {
-  for (const search of ["", "?cad=0", "?cad=false"]) {
+  for (const search of ["", "?v=interiorDriver", "?cad=1", "?c=4-0-0-1-0-0-1-1-0-0-0-0-0-0-0-0"]) {
     Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search } } });
-    assert.equal(carFiles(car), car.files, "existing cabin must remain the default");
+    assert.equal(carFiles(car).interior, CAD_INTERIOR_URL, "public and shared links must use the complete cabin");
   }
-  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cad=1&hq=1" } } });
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cad=0" } } });
+  assert.equal(carFiles(car), car.files, "explicit legacy comparison remains available");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?hq=1" } } });
+  assert.equal(carFiles(car), car.filesHq, "HQ is an explicit source comparison, not the public default");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cad=1" } } });
   const preview = carFiles(car);
   assert.equal(preview.interior, CAD_INTERIOR_URL);
   assert.equal(preview.body, CAD_BODY_URL, "CAD comparison must use the cleaned lightweight body");

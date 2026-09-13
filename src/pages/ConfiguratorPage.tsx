@@ -473,12 +473,14 @@ const ConfiguratorPage = () => {
       localStorage.setItem("mmonogram-builds", JSON.stringify(next));
       setSavedBuilds(next);
     } catch {
-      /* Квота или запрет хранилища — сборка всё равно живёт в ссылке. */
+      // Do not claim success when private mode or quota prevented persistence.
+      setShareUrl(currentBuildUrl());
+      return;
     }
     handleChange({ ...config, saved: true });
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1800);
-  }, [config, handleChange, price]);
+  }, [config, currentBuildUrl, handleChange, price]);
 
   const handleScreenshot = useCallback(async () => {
     const canvas = document.querySelector<HTMLCanvasElement>("#configurator-canvas canvas");
@@ -1071,7 +1073,7 @@ const ConfiguratorPage = () => {
                       ))}
                     </div>
                   </section>
-                  <section>
+                  {config.rim !== 1 && <section>
                     <h3>Brake Calipers</h3>
                     <div className="tuning-option-grid">
                       {CALIPER_FINISHES.map((finish, index) => (
@@ -1084,7 +1086,7 @@ const ConfiguratorPage = () => {
                         />
                       ))}
                     </div>
-                  </section>
+                  </section>}
                 </div>
               ) : (
                 <>

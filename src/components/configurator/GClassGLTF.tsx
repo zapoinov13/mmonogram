@@ -1,4 +1,4 @@
-import { Component, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -17,7 +17,7 @@ import {
 import CabinDetails from "./CabinDetails";
 import { goldCustomRole, goldSteeringRole } from "./goldInterior";
 import GoldRearScreens from "./GoldRearScreens";
-import { CAD_GRILLE_KIT_URL, hideReplacedGrilleFrame } from "./models";
+import { CAD_GRILLE_KIT_URL, CAD_WHEELS_URL, hideReplacedGrilleFrame } from "./models";
 import { getHeadlightAppearance } from "./headlights";
 import ForgedWheelSet from "./ForgedWheelSet";
 
@@ -146,7 +146,7 @@ function Parts({
     root.updateMatrixWorld(true);
 
     const byRole: Record<PartRole, THREE.Mesh[]> = {
-      body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
+      body: [], wheel: [], wheelAccent: [], tire: [], glass: [], roofGlass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
       cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
@@ -174,7 +174,7 @@ function Parts({
         mesh.visible = false;
         return;
       }
-      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_WHEELS_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -267,23 +267,6 @@ function Parts({
   return <primitive object={prepared.root} visible={visible} />;
 }
 
-/** Файл, отсутствие которого не должно ломать остальную сборку. */
-class OptionalBoundary extends Component<{ children: ReactNode; label: string }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.warn(`Модель «${this.props.label}» не загрузилась:`, error.message);
-  }
-
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
-
 export default function GClassGLTF({
   config,
   interiorVisible = false,
@@ -338,9 +321,10 @@ export default function GClassGLTF({
       wheel: new THREE.MeshPhysicalMaterial({
         color: "#0a0a0b",
         metalness: 0.6,
-        roughness: 0.14,
-        clearcoat: 1,
-        clearcoatRoughness: 0.06,
+        roughness: 0.3,
+        envMapIntensity: 0.4,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.2,
       }),
       wheelAccent: new THREE.MeshStandardMaterial({
         color: finish.color,
@@ -357,6 +341,19 @@ export default function GClassGLTF({
         transparent: true,
         opacity: interiorVisible ? 0.12 : 0.24,
         depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+      roofGlass: new THREE.MeshPhysicalMaterial({
+        color: "#11191b",
+        metalness: 0,
+        roughness: 0.24,
+        envMapIntensity: 0.2,
+        specularIntensity: 0.25,
+        clearcoat: 0.15,
+        clearcoatRoughness: 0.22,
+        transparent: false,
+        opacity: 1,
+        depthWrite: true,
         side: THREE.DoubleSide,
       }),
       taillight: new THREE.MeshStandardMaterial({
@@ -542,26 +539,26 @@ export default function GClassGLTF({
               kind="exterior"
               materials={materials}
               onGround={reportGround}
-              replaceWheelFaces={config.rim !== 1}
+              replaceWheelFaces={cadInterior || config.rim !== 1}
             />
+      )}
+
+      {cadInterior && config.kit && config.rim === 1 && (
+        <Parts url={CAD_WHEELS_URL} fit={fit} kind="exterior" materials={materials} />
       )}
 
       {showInterior && files.interior && (
-        <OptionalBoundary label="интерьер">
-            <Parts
-              url={files.interior}
-              fit={fit}
-              kind="interior"
-              materials={materials}
-              hideBox={interiorSteeringMask}
-            />
-        </OptionalBoundary>
+        <Parts
+          url={files.interior}
+          fit={fit}
+          kind="interior"
+          materials={materials}
+          hideBox={interiorSteeringMask}
+        />
       )}
 
       {showInterior && cadInterior && car.files.interior && (
-        <OptionalBoundary label="отделка CAD-салона">
-            <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
-        </OptionalBoundary>
+        <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
       )}
 
       {showInterior && cadInterior && (
@@ -572,27 +569,19 @@ export default function GClassGLTF({
       )}
 
       {showInterior && cadInterior && (
-        <OptionalBoundary label="оригинальная панель">
-          <Parts url={CAD_DASHBOARD_URL} fit={fit} kind="interior" materials={materials} goldTrim />
-        </OptionalBoundary>
+        <Parts url={CAD_DASHBOARD_URL} fit={fit} kind="interior" materials={materials} goldTrim />
       )}
 
       {showInterior && cadInterior && (
-        <OptionalBoundary label="центральная часть руля">
-            <Parts url={CAD_STEERING_CENTER_URL} fit={fit} kind="interior" materials={materials} />
-        </OptionalBoundary>
+        <Parts url={CAD_STEERING_CENTER_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && cadInterior && (
-        <OptionalBoundary label="кнопки и отделка руля">
-            <Parts url={CAD_STEERING_CONTROLS_URL} fit={fit} kind="interior" materials={materials} />
-        </OptionalBoundary>
+        <Parts url={CAD_STEERING_CONTROLS_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && files.steering && (
-        <OptionalBoundary label="руль">
-            <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} goldSteering={cadInterior} />
-        </OptionalBoundary>
+        <Parts url={files.steering} fit={fit} kind="interior" materials={materials} onLoaded={reportSteeringReady} goldSteering={cadInterior} />
       )}
     </group>
   );

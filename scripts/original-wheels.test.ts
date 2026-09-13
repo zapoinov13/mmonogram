@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const bytes = readFileSync("public/models/wheels-original.glb");
+const model = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
+assert.equal(model.meshes.length, 6);
+assert.equal(model.extras.sourceParts.length, 6);
+assert.equal(model.extras.trianglesBeforeCompression, 958176, "Original faces must not be decimated");
+assert.ok(bytes.length < 3 * 1024 * 1024, "Six original wheel parts must fit 3 MiB");
+assert.deepEqual(model.materials.map((m: { name: string }) => m.name).sort(), ["wheel", "wheelAccent"]);
+const triangles = model.meshes.reduce((sum: number, mesh: { primitives: { indices: number }[] }) => sum + mesh.primitives.reduce((n, p) => n + model.accessors[p.indices].count / 3, 0), 0);
+assert.equal(model.extras.sourceDegenerateTriangles, 29541, "Measured zero-area faces already present in the supplied source");
+assert.ok(triangles >= 958176 - model.extras.sourceDegenerateTriangles && triangles <= 958176, "Only the source's zero-area triangles may disappear during compression");
+for (const node of model.nodes.filter((n: { mesh?: number }) => n.mesh !== undefined)) assert.ok(node.name.includes("_5x130_"), "Do not duplicate tires, bodywork or brakes");
+console.log(`Original wheels: 6 source parts, ${triangles} triangles, ${(bytes.length / 1024 / 1024).toFixed(2)} MiB.`);

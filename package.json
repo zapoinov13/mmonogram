@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "seo:check": "node scripts/seo-check.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run check:configurator && npm run build && npm run seo:check",
+    "verify": "npm run lint && npm run typecheck && npm run test:configurator && npm run check:configurator && npm run build && npm run seo:check",
+    "test:configurator": "node scripts/test-configurator.mjs",
     "check:configurator": "node scripts/check-configurator.mjs"
   },
   "dependencies": {
@@ -98,6 +99,7 @@
     "svgo": "^4.0.1",
     "tailwindcss": "^3.4.17",
     "terser": "^5.46.2",
+    "tsx": "4.23.13",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^8.2.2",
