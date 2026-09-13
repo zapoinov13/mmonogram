@@ -141,6 +141,7 @@ export type PartRole =
   | "cabinTrim"    // накладки передней панели: рояльный лак
   | "cabinDisplay"
   | "cabinClock"
+  | "cabinClockGlass"
   | "steeringBlack"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
   | "cabinFloor"   // ковролин
@@ -315,6 +316,7 @@ export const DEBRIS = {
  */
 export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   cabinClock: "#fff4b0",
+  cabinClockGlass: "#a4e6ff",
   body: "#2f6fdb",
   wheel: "#8e44ad",
   wheelAccent: "#d4af37",

@@ -10,6 +10,7 @@ type Model = {
   accessors: { min: [number, number, number]; max: [number, number, number]; count: number }[];
   scene?: number;
   scenes: { nodes: number[] }[];
+  extras: { removedDuplicateParts: string[]; trianglesBeforeCompression: number };
 };
 
 function readModel(name: string) {
@@ -24,8 +25,10 @@ const { bytes, model: replacement } = readModel("console-original.glb");
 const replaced = old.nodes.filter((node: { name: string }) => /^(ita_mi|miko_ob|miko_mi)_/.test(node.name));
 assert.equal(replaced.length, 5, "Recheck replacement filtering when CAD assemblies change");
 assert.ok(bytes.length < 3 * 1024 * 1024, "Console download must stay below 3 MiB");
-assert.equal(replacement.meshes.length, 2, "Batch source details into two material groups");
-assert.deepEqual(replacement.materials.map((material: { name: string }) => material.name).sort(), ["cabinLeather", "cabinTrim"]);
+assert.equal(replacement.meshes.length, 3, "Batch source details by leather, lacquer and metal");
+assert.deepEqual(replacement.materials.map((material: { name: string }) => material.name).sort(), ["cabinLeather", "cabinMetal", "cabinTrim"]);
+assert.deepEqual(replacement.extras.removedDuplicateParts.map((name) => name.split("blende__").pop()), ["_L_104.001", "_L_125.001"], "Only verified coincident front-panel copies are removed");
+assert.equal(replacement.extras.trianglesBeforeCompression, 659398 - 2751 - 19407, "Only duplicate geometry is removed from the CAD source");
 
 function bounds(model: Model, filter: (name: string) => boolean) {
   const result = new Box3();
@@ -58,6 +61,6 @@ const after = bounds(replacement, () => true);
 assert.ok(before.min.distanceTo(after.min) < 0.005, "Console minimum must match source placement within 5 mm");
 assert.ok(before.max.distanceTo(after.max) < 0.005, "Console maximum must match source placement within 5 mm");
 const triangles = replacement.meshes.reduce((total, mesh) => total + mesh.primitives.reduce((sum, primitive) => sum + replacement.accessors[primitive.indices].count / 3, 0), 0);
-// Draco drops 93 degenerate triangles from the 659398-triangle source.
-assert.equal(triangles, 659305, "Do not silently decimate original console detail");
+// Draco drops 93 degenerate triangles after the duplicate panels are removed.
+assert.equal(triangles, 637147, "Do not silently decimate original console detail");
 console.log(`Console source verified: ${triangles} triangles, ${(bytes.length / 1024 / 1024).toFixed(2)} MiB, aligned bounds`);

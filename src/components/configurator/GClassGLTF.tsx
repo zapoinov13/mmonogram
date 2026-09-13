@@ -132,7 +132,8 @@ function Parts({
   goldSteering?: boolean;
   replaceWheelFaces?: boolean;
 }) {
-  const { scene } = useGLTF(`${url}?v=20260913-cabin`, DRACO_PATH);
+  const revision = url === CAD_CONSOLE_URL ? "20260913-console-2" : "20260913-cabin";
+  const { scene } = useGLTF(`${url}?v=${revision}`, DRACO_PATH);
 
   const prepared = useMemo(() => {
     const root = scene.clone(true);
@@ -146,7 +147,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], cabinClock: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -448,6 +449,11 @@ export default function GClassGLTF({
         envMapIntensity: 0.03,
       }),
       cabinClock: new THREE.MeshStandardMaterial({ color: "#ece7dc", roughness: 0.5, metalness: 0.08 }),
+      cabinClockGlass: new THREE.MeshPhysicalMaterial({
+        color: "#ffffff", metalness: 0, roughness: 0.08,
+        transparent: true, opacity: 0.08, depthWrite: false,
+        envMapIntensity: 0.15, specularIntensity: 0.25,
+      }),
       steeringBlack: new THREE.MeshStandardMaterial({
         color: "#101011", metalness: 0, roughness: 0.62, envMapIntensity: 0.12,
       }),

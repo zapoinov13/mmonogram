@@ -12,9 +12,11 @@ export function goldSteeringRole(name: string): "steeringBlack" | "cabinAccent" 
   return undefined;
 }
 
-export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "cabinTrim" | "cabinMetal" | "cabinClock" | undefined {
-  if (name === "чсы" || name === "чсы.001" || name === "чсы001") return "cabinClock";
-  if (/^чсы\.?00[123]$/.test(name)) return "cabinMetal";
+export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "cabinTrim" | "cabinMetal" | "cabinClock" | "cabinClockGlass" | undefined {
+  // Original watch: hands, cover glass, bezel, embossed dial respectively.
+  if (name === "чсы" || /^чсы\.?002$/.test(name)) return "cabinMetal";
+  if (/^чсы\.?001$/.test(name)) return "cabinClockGlass";
+  if (/^чсы\.?003$/.test(name)) return "cabinClock";
   const plane = name.match(/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?(\d+)$/)?.[1];
   if (plane && blackInserts.has(plane)) return "cabinLeather";
   if (plane && cognacShells.has(plane)) return "cabinAccent";

@@ -12,4 +12,8 @@ for (const id of ["016", "033", "043", "053", "072", "111"]) {
   assert.equal(goldCustomRole(`${plane}${id}`), "cabinAccent", "cognac shell");
 }
 assert.equal(goldCustomRole("unknown"), undefined, "unknown geometry retains existing classification");
+for (const [name, role] of [["чсы", "cabinMetal"], ["чсы.001", "cabinClockGlass"], ["чсы.002", "cabinMetal"], ["чсы.003", "cabinClock"]]) {
+  assert.equal(goldCustomRole(name), role, `${name}: original clock component`);
+  assert.equal(goldCustomRole(PropertyBinding.sanitizeNodeName(name)), role, `${name}: normalized clock component`);
+}
 console.log("Gold Package: black inserts, cognac shells and GLTF-normalized names passed.");
