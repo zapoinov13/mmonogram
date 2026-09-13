@@ -13,11 +13,11 @@ export interface ForgedWheelSpec {
 
 export function getForgedWheelSpec(design: number): ForgedWheelSpec {
   return [
-    { spokes: 8, paired: false, aero: false, twist: 0, spokeWidth: 0.072 },
+    { spokes: 8, paired: false, aero: false, twist: 0, spokeWidth: 0.028 },
     { spokes: 10, paired: true, aero: false, twist: 0, spokeWidth: 0.012 },
-    { spokes: 10, paired: false, aero: false, twist: 0.18, spokeWidth: 0.052 },
-    { spokes: 18, paired: false, aero: false, twist: 0.32, spokeWidth: 0.032 },
-    { spokes: 12, paired: false, aero: true, twist: -0.12, spokeWidth: 0.028 },
+    { spokes: 10, paired: true, aero: false, twist: 0.18, spokeWidth: 0.012 },
+    { spokes: 18, paired: false, aero: false, twist: 0.32, spokeWidth: 0.016 },
+    { spokes: 12, paired: false, aero: true, twist: -0.12, spokeWidth: 0.014 },
   ][design] ?? { spokes: 12, paired: true, aero: false, twist: 0, spokeWidth: 0.026 };
 }
 
@@ -26,30 +26,34 @@ const REAR_WHEEL_X = -1.34;
 const WHEEL_Y = 0.23;
 const WHEEL_Z = 0.88;
 
-function createSpokeGeometry(width: number) {
+export function createSpokeGeometry(width: number, twist = 0) {
   const shape = new THREE.Shape();
-  shape.moveTo(0.06, -width * 0.55);
-  shape.lineTo(0.255, -width);
-  shape.quadraticCurveTo(0.305, -width * 0.7, 0.315, -width * 0.18);
-  shape.lineTo(0.315, width * 0.18);
-  shape.quadraticCurveTo(0.305, width * 0.7, 0.255, width);
-  shape.lineTo(0.06, width * 0.55);
+  const sweep = twist * 0.22;
+  shape.moveTo(0.08, -width * 0.55);
+  shape.bezierCurveTo(0.16, -width * 0.7, 0.245, sweep * 0.5 - width, 0.322, sweep - width * 0.6);
+  shape.lineTo(0.322, sweep + width * 0.6);
+  shape.bezierCurveTo(0.245, sweep * 0.5 + width, 0.16, width * 0.7, 0.08, width * 0.55);
   shape.closePath();
 
   const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: 0.026,
+    depth: 0.018,
     bevelEnabled: true,
-    bevelSegments: 2,
-    bevelSize: 0.008,
-    bevelThickness: 0.006,
-    curveSegments: 4,
+    bevelSegments: 3,
+    bevelSize: 0.003,
+    bevelThickness: 0.003,
+    curveSegments: 12,
   });
   geometry.rotateX(-Math.PI / 2);
+  const positions = geometry.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const radius = THREE.MathUtils.clamp((positions.getX(i) - 0.08) / 0.242, 0, 1);
+    positions.setY(i, positions.getY(i) + radius * radius * 0.032);
+  }
   geometry.computeVertexNormals();
   return geometry;
 }
 
-function ForgedWheel({
+export function ForgedWheel({
   position,
   design,
   finishIndex,
@@ -63,7 +67,7 @@ function ForgedWheel({
   const spec = getForgedWheelSpec(design);
   const finish = RIM_FINISHES[finishIndex] ?? RIM_FINISHES[0];
   const caliper = CALIPER_FINISHES[caliperIndex] ?? CALIPER_FINISHES[0];
-  const spokeGeometry = useMemo(() => createSpokeGeometry(spec.spokeWidth), [spec.spokeWidth]);
+  const spokeGeometry = useMemo(() => createSpokeGeometry(spec.spokeWidth, spec.twist), [spec.spokeWidth, spec.twist]);
   const materials = useMemo(() => ({
     rim: new THREE.MeshPhysicalMaterial({
       color: finish.color,
@@ -79,10 +83,10 @@ function ForgedWheel({
     caliper: new THREE.MeshPhysicalMaterial({ color: caliper.color, metalness: 0.34, roughness: 0.3, clearcoat: 0.7 }),
   }), [caliper.color, finish]);
 
+  useEffect(() => () => spokeGeometry.dispose(), [spokeGeometry]);
   useEffect(() => () => {
-    spokeGeometry.dispose();
     Object.values(materials).forEach((material) => material.dispose());
-  }, [materials, spokeGeometry]);
+  }, [materials]);
 
   const spokeAngles = useMemo(() => {
     const angles: number[] = [];
@@ -99,10 +103,10 @@ function ForgedWheel({
       <mesh material={materials.barrel} position={[0, 0.025, 0]} receiveShadow>
         <cylinderGeometry args={[0.345, 0.345, 0.25, 64, 1, true]} />
       </mesh>
-      <mesh material={materials.brakeDark} position={[0, 0.095, 0]}>
+      <mesh material={materials.brakeDark} position={[0, 0.033, 0]}>
         <cylinderGeometry args={[0.115, 0.115, 0.024, 48]} />
       </mesh>
-      <mesh material={materials.brake} position={[0, 0.112, 0]}>
+      <mesh material={materials.brake} position={[0, 0.05, 0]}>
         <cylinderGeometry args={[0.245, 0.245, 0.018, 64]} />
       </mesh>
       {Array.from({ length: 16 }, (_, index) => {
@@ -111,13 +115,13 @@ function ForgedWheel({
           <mesh
             key={`vent-${index}`}
             material={materials.brakeDark}
-            position={[Math.cos(angle) * 0.19, 0.126, Math.sin(angle) * 0.19]}
+            position={[Math.cos(angle) * 0.19, 0.064, Math.sin(angle) * 0.19]}
           >
             <cylinderGeometry args={[0.009, 0.009, 0.006, 8]} />
           </mesh>
         );
       })}
-      <RoundedBox args={[0.09, 0.058, 0.16]} radius={0.022} smoothness={3} position={[0.2, 0.145, 0.065]} material={materials.caliper} />
+      <RoundedBox args={[0.09, 0.058, 0.16]} radius={0.022} smoothness={3} position={[0.2, 0.095, 0.065]} material={materials.caliper} />
 
       {spec.aero && (
         <mesh material={materials.rim} position={[0, 0.145, 0]}>
@@ -135,8 +139,8 @@ function ForgedWheel({
           key={`spoke-${index}`}
           geometry={spokeGeometry}
           material={materials.rim}
-          position={[0, 0.16, 0]}
-          rotation={[0, angle + spec.twist, 0]}
+          position={[0, 0.137, 0]}
+          rotation={[0, angle, 0]}
         />
       ))}
 

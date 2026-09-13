@@ -156,37 +156,6 @@ function PaintChip({ color }: { color: string }) {
   );
 }
 
-function WheelDesignChip({ design }: { design: number }) {
-  const spokes = [8, 12, 10, 18, 12][design] ?? 12;
-  const paired = design === 1;
-  const angles = Array.from({ length: spokes }, (_, index) => (index / spokes) * 360);
-  return (
-    <span className={`relative grid place-items-center overflow-hidden ${TILE}`}>
-      <svg viewBox="0 0 76 48" className="h-full w-full" aria-hidden>
-        <rect width="76" height="48" fill="#111214" />
-        <circle cx="38" cy="24" r="19" fill="#08090a" stroke="#4b4d50" strokeWidth="2" />
-        <circle cx="38" cy="24" r="15.5" fill={design === 4 ? "#292b2e" : "#15171a"} stroke="#b9a16f" strokeWidth="1.2" />
-        {angles.flatMap((angle, index) => {
-          const offsets = paired ? [-2.5, 2.5] : [0];
-          return offsets.map((offset) => (
-            <line
-              key={`${index}-${offset}`}
-              x1="38"
-              y1="24"
-              x2="52"
-              y2="24"
-              stroke="#d6d8da"
-              strokeWidth={design === 0 ? 2.4 : 1.3}
-              transform={`rotate(${angle + offset + (design === 3 ? 12 : 0)} 38 24)`}
-            />
-          ));
-        })}
-        <circle cx="38" cy="24" r="4.2" fill="#090a0b" stroke="#d7bd82" strokeWidth="1.2" />
-      </svg>
-    </span>
-  );
-}
-
 /**
  * Отделка салона: основной тон плашкой, акцент полосой снизу — как на
  * карточке кожи у обивщика. Габарит тот же, что у остальных плиток, иначе
@@ -301,9 +270,17 @@ const ConfiguratorPage = () => {
   const [sceneReady, setSceneReady] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const wheelGalleryRef = useRef<HTMLDivElement>(null);
   const tuningTriggerRef = useRef<HTMLButtonElement>(null);
   const tuningCloseRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { optionsRef.current?.scrollTo({ top: 0 }); }, [activeSection]);
+  useEffect(() => {
+    const gallery = wheelGalleryRef.current;
+    const selected = gallery?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!gallery || !selected || gallery.scrollWidth <= gallery.clientWidth) return;
+    gallery.scrollLeft += selected.getBoundingClientRect().left - gallery.getBoundingClientRect().left
+      - (gallery.clientWidth - selected.offsetWidth) / 2;
+  }, [activeSection, config.rim, tuningOpen]);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [screenshotFlash, setScreenshotFlash] = useState(false);
@@ -1047,15 +1024,25 @@ const ConfiguratorPage = () => {
                 <div className="tuning-wheel-controls">
                   <section>
                     <h3>Wheel Design</h3>
-                    <div className="tuning-option-grid">
+                    <div ref={wheelGalleryRef} className="tuning-wheel-gallery" aria-label="Wheel Design">
                       {RIM_DESIGNS.map((design, index) => (
-                        <OptionCard
+                        <button
+                          type="button"
                           key={design.id}
-                          selected={config.rim === index}
+                          className="tuning-wheel-choice"
+                          aria-pressed={config.rim === index}
                           onClick={() => set({ rim: index })}
-                          title={design.name}
-                          preview={<WheelDesignChip design={index} />}
-                        />
+                        >
+                          <img
+                            src={`/images/wheels/${design.id}-${RIM_FINISHES[config.rimFinish].id}.webp`}
+                            alt=""
+                            width={384}
+                            height={384}
+                            decoding="async"
+                          />
+                          <span className="tuning-wheel-name">{design.name}</span>
+                          {config.rim === index && <span className="tuning-option-check"><Check size={14} /></span>}
+                        </button>
                       ))}
                     </div>
                   </section>
