@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_STEERING_DETAILS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import { createInstrumentTexture } from "./instrumentTexture";
 import {
   cabinDashAtMax,
@@ -148,7 +148,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], roofGlass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], steeringAccent: [], steeringMetal: [], steeringMarking: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -174,7 +174,7 @@ function Parts({
         mesh.visible = false;
         return;
       }
-      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_WHEELS_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_WHEELS_URL || url === CAD_STEERING_DETAILS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -461,8 +461,19 @@ export default function GClassGLTF({
         transparent: true, opacity: 0.08, depthWrite: false,
         envMapIntensity: 0.15, specularIntensity: 0.25,
       }),
-      steeringBlack: new THREE.MeshStandardMaterial({
-        color: "#101011", metalness: 0, roughness: 0.62, envMapIntensity: 0.12,
+      steeringBlack: new THREE.MeshPhysicalMaterial({
+        color: "#101011", metalness: 0, roughness: 0.6, envMapIntensity: 0.08, specularIntensity: 0.3,
+      }),
+      steeringAccent: new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(interior.accent).multiplyScalar(0.48),
+        metalness: 0, roughness: 0.64, envMapIntensity: 0.07, specularIntensity: 0.25,
+      }),
+      // Gold Package cabin detailing is independent of the exterior grille.
+      steeringMetal: new THREE.MeshStandardMaterial({
+        color: "#cfb77e", metalness: 0.85, roughness: 0.28, envMapIntensity: 0.5,
+      }),
+      steeringMarking: new THREE.MeshStandardMaterial({
+        color: "#e2dfd6", metalness: 0, roughness: 0.58, envMapIntensity: 0.06,
       }),
       /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
          но сатиновую: полированное золото вблизи выбивается в белое. */
@@ -573,11 +584,7 @@ export default function GClassGLTF({
       )}
 
       {showInterior && cadInterior && (
-        <Parts url={CAD_STEERING_CENTER_URL} fit={fit} kind="interior" materials={materials} />
-      )}
-
-      {showInterior && cadInterior && (
-        <Parts url={CAD_STEERING_CONTROLS_URL} fit={fit} kind="interior" materials={materials} />
+        <Parts url={CAD_STEERING_DETAILS_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && files.steering && (

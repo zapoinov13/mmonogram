@@ -5,9 +5,9 @@ const blackInserts = new Set([
 ]);
 const cognacShells = new Set(["014", "016", "017", "018", "020", "026", "033", "042", "043", "051", "053", "064", "072", "074", "110", "111"]);
 
-export function goldSteeringRole(name: string): "steeringBlack" | "cabinAccent" | "cabinTrim" | undefined {
+export function goldSteeringRole(name: string): "steeringBlack" | "steeringAccent" | "cabinTrim" | undefined {
   if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?029$/.test(name)) return "steeringBlack";
-  if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?031$/.test(name)) return "cabinAccent";
+  if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?031$/.test(name)) return "steeringAccent";
   if (name.includes("_lenkr_voli_amgnap")) return "cabinTrim";
   return undefined;
 }

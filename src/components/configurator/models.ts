@@ -19,6 +19,7 @@ export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
 export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
+export const CAD_STEERING_DETAILS_URL = `${MODEL_BASE}/steering-details.glb`;
 export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-original.glb`;
 export const CAD_CONSOLE_URL = `${MODEL_BASE}/console-original.glb`;
 export const CAD_INSTRUMENTS_URL = `${MODEL_BASE}/instruments-original.glb`;
@@ -149,6 +150,9 @@ export type PartRole =
   | "cabinInfotainment"
   | "cabinScreenGlass"
   | "steeringBlack"
+  | "steeringAccent"
+  | "steeringMetal"
+  | "steeringMarking"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
   | "cabinFloor"   // ковролин
   | "cabinRoof"    // потолок
@@ -333,6 +337,9 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   wheelAccent: "#d4af37",
   cabinDisplay: "#284b63",
   steeringBlack: "#181818",
+  steeringAccent: "#50251b",
+  steeringMetal: "#d5bc87",
+  steeringMarking: "#e0e0dc",
   tire: "#444444",
   glass: "#25d0c0",
   roofGlass: "#145b67",
