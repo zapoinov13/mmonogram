@@ -3,7 +3,8 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { createInstrumentTexture } from "./instrumentTexture";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -147,7 +148,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -169,11 +170,11 @@ function Parts({
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
-      if (url === CAD_INTERIOR_URL && /^(ita_mi|miko_ob|miko_mi)_/.test(mesh.name)) {
+      if (url === CAD_INTERIOR_URL && (/^(ita_mi|miko_ob|miko_mi)_/.test(mesh.name) || mesh.name === "ita_ob_cabinDisplay")) {
         mesh.visible = false;
         return;
       }
-      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_STEERING_CENTER_URL || url === CAD_STEERING_CONTROLS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -308,6 +309,8 @@ export default function GClassGLTF({
     [],
   );
 
+  const instrumentMaps = useMemo(() => ({ driver: createInstrumentTexture("driver"), centre: createInstrumentTexture("centre") }), []);
+  useLayoutEffect(() => () => Object.values(instrumentMaps).forEach((texture) => texture.dispose()), [instrumentMaps]);
   const materials = useMemo<Materials>(() => {
     if (debugRoles) {
       const debug = {} as Materials;
@@ -449,6 +452,13 @@ export default function GClassGLTF({
         envMapIntensity: 0.03,
       }),
       cabinClock: new THREE.MeshStandardMaterial({ color: "#ece7dc", roughness: 0.5, metalness: 0.08 }),
+      cabinInstruments: new THREE.MeshBasicMaterial({ map: instrumentMaps.driver, toneMapped: false }),
+      cabinInfotainment: new THREE.MeshBasicMaterial({ map: instrumentMaps.centre, toneMapped: false }),
+      cabinScreenGlass: new THREE.MeshPhysicalMaterial({
+        color: "#ffffff", roughness: 0.12, metalness: 0,
+        transparent: true, opacity: 0.04, depthWrite: false,
+        envMapIntensity: 0.08, specularIntensity: 0.15,
+      }),
       cabinClockGlass: new THREE.MeshPhysicalMaterial({
         color: "#ffffff", metalness: 0, roughness: 0.08,
         transparent: true, opacity: 0.08, depthWrite: false,
@@ -469,7 +479,7 @@ export default function GClassGLTF({
       cabinFloor: new THREE.MeshStandardMaterial({ color: "#0e0c0c", metalness: 0, roughness: 0.96, envMapIntensity: 0.05 }),
       cabinRoof: new THREE.MeshStandardMaterial({ color: "#141312", metalness: 0, roughness: 0.9, envMapIntensity: 0.05 }),
     };
-  }, [debugRoles, interiorVisible, cadInterior, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
+  }, [instrumentMaps, debugRoles, interiorVisible, cadInterior, config.paint, config.rimFinish, config.grille, config.carbon, config.lights, config.interior]);
 
   useLayoutEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
@@ -556,6 +566,9 @@ export default function GClassGLTF({
 
       {showInterior && cadInterior && (
         <Parts url={CAD_CONSOLE_URL} fit={fit} kind="interior" materials={materials} />
+      )}
+      {showInterior && cadInterior && (
+        <Parts url={CAD_INSTRUMENTS_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && cadInterior && (

@@ -8,10 +8,14 @@ for (const id of ["012", "015", "032", "040", "044", "049", "050", "052", "108",
     assert.equal(goldCustomRole(name), "cabinLeather", `${name}: black insert`);
   }
 }
-for (const id of ["016", "033", "043", "053", "072", "111"]) {
+for (const id of ["016", "018", "020", "033", "043", "053", "072", "111"]) {
   assert.equal(goldCustomRole(`${plane}${id}`), "cabinAccent", "cognac shell");
 }
 assert.equal(goldCustomRole("unknown"), undefined, "unknown geometry retains existing classification");
+for (const id of ["019", "045"]) {
+  assert.equal(goldCustomRole(`${plane}.${id}`), "cabinMetal", "original rear cabin emblem");
+  assert.equal(goldCustomRole(`${plane}${id}`), "cabinMetal", "normalized rear cabin emblem");
+}
 for (const [name, role] of [["чсы", "cabinMetal"], ["чсы.001", "cabinClockGlass"], ["чсы.002", "cabinMetal"], ["чсы.003", "cabinClock"]]) {
   assert.equal(goldCustomRole(name), role, `${name}: original clock component`);
   assert.equal(goldCustomRole(PropertyBinding.sanitizeNodeName(name)), role, `${name}: normalized clock component`);
