@@ -3,7 +3,7 @@ import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { CAD_DASHBOARD_URL, CAD_INTERIOR_URL, CAD_STEERING_CENTER_URL, CAD_STEERING_CONTROLS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -146,7 +146,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelAccent: [], tire: [], glass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinClock: [], steeringBlack: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -203,7 +203,8 @@ function Parts({
         const role = goldSteering ? goldSteeringRole(mesh.name) : goldTrim ? goldCustomRole(mesh.name) : undefined;
         // The custom file also contains a second dashboard and console.
         // Only explicitly mapped upholstery belongs over the CAD assembly.
-        if (goldTrim && !role) {
+        const originalDashboardPart = /^(?:Куб\.?03[24]|Плоскость\.?(?:021|078|046|047|073)|чсы(?:\.?00[123])?)$/.test(mesh.name);
+        if (goldTrim && (!role || (originalDashboardPart && url !== CAD_DASHBOARD_URL))) {
           mesh.visible = false;
           continue;
         }
@@ -432,8 +433,8 @@ export default function GClassGLTF({
         side: THREE.DoubleSide,
         color: "#0b0b0c",
         metalness: cadInterior ? 0.15 : 0.5,
-        roughness: cadInterior ? 0.36 : 0.14,
-        envMapIntensity: cadInterior ? 0.16 : 0.4,
+        roughness: cadInterior ? 0.24 : 0.14,
+        envMapIntensity: cadInterior ? 0.2 : 0.4,
       }),
       cabinDisplay: new THREE.MeshPhysicalMaterial({
         color: "#050607",
@@ -442,6 +443,7 @@ export default function GClassGLTF({
         specularIntensity: 0.08,
         envMapIntensity: 0.03,
       }),
+      cabinClock: new THREE.MeshStandardMaterial({ color: "#ece7dc", roughness: 0.5, metalness: 0.08 }),
       steeringBlack: new THREE.MeshStandardMaterial({
         color: "#101011", metalness: 0, roughness: 0.62, envMapIntensity: 0.12,
       }),
@@ -539,6 +541,12 @@ export default function GClassGLTF({
       {showInterior && cadInterior && car.files.interior && (
         <OptionalBoundary label="отделка CAD-салона">
             <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
+        </OptionalBoundary>
+      )}
+
+      {showInterior && cadInterior && (
+        <OptionalBoundary label="оригинальная панель">
+          <Parts url={CAD_DASHBOARD_URL} fit={fit} kind="interior" materials={materials} goldTrim />
         </OptionalBoundary>
       )}
 

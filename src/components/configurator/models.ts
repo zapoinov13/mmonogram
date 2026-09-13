@@ -19,6 +19,7 @@ export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
 export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
+export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-original.glb`;
 
 /** The cleaned body and custom kit contain coincident outer grille frames.
  * Keep the body copy until the replacement is loaded. GLTFLoader sanitizes names. */
@@ -138,6 +139,7 @@ export type PartRole =
   | "cabinAccent"  // бордовая кожа сидений — главный контраст салона
   | "cabinTrim"    // накладки передней панели: рояльный лак
   | "cabinDisplay"
+  | "cabinClock"
   | "steeringBlack"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
   | "cabinFloor"   // ковролин
@@ -311,6 +313,7 @@ export const DEBRIS = {
  * по тёмному салону на тёмном фоне это иначе не разобрать.
  */
 export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
+  cabinClock: "#fff4b0",
   body: "#2f6fdb",
   wheel: "#8e44ad",
   wheelAccent: "#d4af37",

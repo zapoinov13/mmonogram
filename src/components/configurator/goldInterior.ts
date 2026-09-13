@@ -12,11 +12,14 @@ export function goldSteeringRole(name: string): "steeringBlack" | "cabinAccent" 
   return undefined;
 }
 
-export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "cabinTrim" | undefined {
+export function goldCustomRole(name: string): "cabinLeather" | "cabinAccent" | "cabinTrim" | "cabinMetal" | "cabinClock" | undefined {
+  if (name === "чсы" || name === "чсы.001" || name === "чсы001") return "cabinClock";
+  if (/^чсы\.?00[123]$/.test(name)) return "cabinMetal";
   const plane = name.match(/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?(\d+)$/)?.[1];
   if (plane && blackInserts.has(plane)) return "cabinLeather";
   if (plane && cognacShells.has(plane)) return "cabinAccent";
-  if (plane === "021" || plane === "078") return "cabinTrim";
+  if (plane === "021" || plane === "078" || plane === "073") return "cabinTrim";
+  if (plane === "046" || plane === "047") return "cabinMetal";
   if (/^\u041a\u0443\u0431\.?03[24]$/.test(name)) return "cabinTrim";
   if (/^\u041a\u0443\u0431\.?03[56]$/.test(name)) return "cabinAccent";
   if (/^\u0422\u0435\u0441\u0442\.?00[15]$/.test(name)) return "cabinLeather";
