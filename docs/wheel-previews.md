@@ -28,3 +28,21 @@ the vertices and that spokes have a non-flat profile.
 This is a presentation and geometry correction, not a claim that the four
 alternative designs are supplied M Monogram CAD models. Only ICONIC Original
 uses the provided original wheel mesh.
+
+## Tire Fitment
+
+`wheelFitment.ts` measures both sides of the original front/rear tire and rim
+meshes using the same body transform as the vehicle. The alternative wheel lip
+matches the source rim diameter and outer face, with at least 3 mm clearance
+behind the tire's widest sidewall. The barrel stays inside both sidewalls;
+the rear barrel follows the wider rear tire. Hub caps and fasteners sit behind
+the lip instead of projecting out of the wheel.
+
+Do not restore the old fixed Z offset of 0.88 m: combined with the model's local
+face depth it placed the lip 6-7 cm outside the tire. Do not increase tire size to
+hide an incorrectly positioned rim. Original CAD tires, tread and ICONIC wheels
+remain unchanged. The source mesh names are shared by the refined and HQ kits.
+
+`wheel-fitment.test.ts` covers all four seats, mirrored sides, transformed source
+coordinates, radial fit and front/rear width differences. `forged-wheel.test.ts`
+also checks the spoke vertices against the seated rim envelope.

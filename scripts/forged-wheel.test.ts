@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createSpokeGeometry, getForgedWheelSpec } from "../src/components/configurator/ForgedWheelSet";
+import { WHEEL_LIP } from "../src/components/configurator/wheelFitment";
 
 const designs = Array.from({ length: 5 }, (_, index) => getForgedWheelSpec(index));
 
@@ -16,5 +17,14 @@ geometry.computeBoundingBox();
 assert.ok(geometry.boundingBox!.max.y - geometry.boundingBox!.min.y > 0.04, "spokes need a dished 3D profile");
 assert.ok(Array.from(geometry.attributes.position.array).every(Number.isFinite));
 geometry.dispose();
+for (const design of designs) {
+  const spoke = createSpokeGeometry(design.spokeWidth, design.twist);
+  const positions = spoke.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    assert.ok(Math.hypot(positions.getX(i), positions.getZ(i)) <= WHEEL_LIP.radius + WHEEL_LIP.tube, "spokes must not pass through the rim lip into the tire");
+    assert.ok(positions.getY(i) + 0.137 <= WHEEL_LIP.depth + WHEEL_LIP.tube + 0.002, "spoke bevel must remain within the seated wheel face");
+  }
+  spoke.dispose();
+}
 
 console.log("All five forged-wheel designs have distinct geometry specs.");

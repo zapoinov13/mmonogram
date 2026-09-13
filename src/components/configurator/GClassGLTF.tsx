@@ -514,7 +514,7 @@ export default function GClassGLTF({
     <group position-y={groundOffset}>
       <HeadlightRig enabled={config.lights} />
       {config.kit && files.kit && config.rim !== 1 && (
-        <ForgedWheelSet design={config.rim} finish={config.rimFinish} caliper={config.caliper} />
+        <ForgedWheelSet kitUrl={files.kit} fit={fit} design={config.rim} finish={config.rimFinish} caliper={config.caliper} />
       )}
       <group position={fit.position} quaternion={fit.quaternion} scale={fit.scale}>
         {!cadInterior && <CabinDetails night={config.night} interior={config.interior} />}

@@ -1,7 +1,10 @@
 import { useEffect, useMemo } from "react";
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { CALIPER_FINISHES, RIM_FINISHES } from "./config";
+import { DRACO_PATH } from "./models";
+import type { Fit } from "./fitModel";
+import { measureWheelFitments, WHEEL_LIP } from "./wheelFitment";
 
 export interface ForgedWheelSpec {
   spokes: number;
@@ -20,11 +23,6 @@ export function getForgedWheelSpec(design: number): ForgedWheelSpec {
     { spokes: 12, paired: false, aero: true, twist: -0.12, spokeWidth: 0.014 },
   ][design] ?? { spokes: 12, paired: true, aero: false, twist: 0, spokeWidth: 0.026 };
 }
-
-const FRONT_WHEEL_X = 1.5;
-const REAR_WHEEL_X = -1.34;
-const WHEEL_Y = 0.23;
-const WHEEL_Z = 0.88;
 
 export function createSpokeGeometry(width: number, twist = 0) {
   const shape = new THREE.Shape();
@@ -58,11 +56,15 @@ export function ForgedWheel({
   design,
   finishIndex,
   caliperIndex,
+  radialScale = 1,
+  barrelDepth = 0.25,
 }: {
   position: [number, number, number];
   design: number;
   finishIndex: number;
   caliperIndex: number;
+  radialScale?: number;
+  barrelDepth?: number;
 }) {
   const spec = getForgedWheelSpec(design);
   const finish = RIM_FINISHES[finishIndex] ?? RIM_FINISHES[0];
@@ -99,9 +101,9 @@ export function ForgedWheel({
   }, [spec.paired, spec.spokes]);
 
   return (
-    <group position={position} rotation={[position[2] > 0 ? Math.PI / 2 : -Math.PI / 2, 0, 0]}>
-      <mesh material={materials.barrel} position={[0, 0.025, 0]} receiveShadow>
-        <cylinderGeometry args={[0.345, 0.345, 0.25, 64, 1, true]} />
+    <group position={position} rotation={[position[2] > 0 ? Math.PI / 2 : -Math.PI / 2, 0, 0]} scale={[radialScale, 1, radialScale]}>
+      <mesh material={materials.barrel} position={[0, WHEEL_LIP.depth - barrelDepth / 2, 0]} receiveShadow>
+        <cylinderGeometry args={[WHEEL_LIP.radius, WHEEL_LIP.radius, barrelDepth, 64, 1, true]} />
       </mesh>
       <mesh material={materials.brakeDark} position={[0, 0.033, 0]}>
         <cylinderGeometry args={[0.115, 0.115, 0.024, 48]} />
@@ -124,14 +126,14 @@ export function ForgedWheel({
       <RoundedBox args={[0.09, 0.058, 0.16]} radius={0.022} smoothness={3} position={[0.2, 0.095, 0.065]} material={materials.caliper} />
 
       {spec.aero && (
-        <mesh material={materials.rim} position={[0, 0.145, 0]}>
+        <mesh material={materials.rim} position={[0, 0.125, 0]}>
           <cylinderGeometry args={[0.3, 0.3, 0.024, 64]} />
         </mesh>
       )}
-      <mesh material={materials.rim} position={[0, 0.175, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.325, 0.014, 16, 64]} />
+      <mesh material={materials.rim} position={[0, WHEEL_LIP.depth, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[WHEEL_LIP.radius, WHEEL_LIP.tube, 16, 64]} />
       </mesh>
-      <mesh material={materials.rim} position={[0, 0.178, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh material={materials.rim} position={[0, 0.137, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.102, 0.009, 12, 48]} />
       </mesh>
       {spokeAngles.map((angle, index) => (
@@ -144,8 +146,8 @@ export function ForgedWheel({
         />
       ))}
 
-      <mesh material={materials.rim} position={[0, 0.19, 0]}>
-        <cylinderGeometry args={[0.092, 0.104, 0.05, 40]} />
+      <mesh material={materials.rim} position={[0, 0.134, 0]}>
+        <cylinderGeometry args={[0.092, 0.104, 0.03, 40]} />
       </mesh>
       {Array.from({ length: 5 }, (_, index) => {
         const angle = (index / 5) * Math.PI * 2;
@@ -153,16 +155,16 @@ export function ForgedWheel({
           <mesh
             key={`lug-${index}`}
             material={materials.rim}
-            position={[Math.cos(angle) * 0.06, 0.222, Math.sin(angle) * 0.06]}
+            position={[Math.cos(angle) * 0.06, 0.155, Math.sin(angle) * 0.06]}
           >
-            <cylinderGeometry args={[0.012, 0.012, 0.018, 12]} />
+            <cylinderGeometry args={[0.012, 0.012, 0.012, 12]} />
           </mesh>
         );
       })}
-      <mesh material={materials.brakeDark} position={[0, 0.226, 0]}>
-        <cylinderGeometry args={[0.045, 0.045, 0.018, 32]} />
+      <mesh material={materials.brakeDark} position={[0, 0.157, 0]}>
+        <cylinderGeometry args={[0.045, 0.045, 0.012, 32]} />
       </mesh>
-      <mesh material={materials.rim} position={[0, 0.239, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh material={materials.rim} position={[0, 0.167, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.039, 0.004, 10, 32]} />
       </mesh>
     </group>
@@ -173,22 +175,28 @@ export default function ForgedWheelSet({
   design,
   finish,
   caliper,
+  kitUrl,
+  fit,
 }: {
   design: number;
   finish: number;
   caliper: number;
+  kitUrl: string;
+  fit: Fit;
 }) {
+  const { scene } = useGLTF(`${kitUrl}?v=20260913-cabin`, DRACO_PATH);
+  const wheels = useMemo(() => measureWheelFitments(scene, fit), [scene, fit]);
   return (
     <group>
-      {[FRONT_WHEEL_X, REAR_WHEEL_X].flatMap((x) => [WHEEL_Z, -WHEEL_Z].map((z) => (
+      {wheels.map((wheel, index) => (
         <ForgedWheel
-          key={`${x}-${z}`}
-          position={[x, WHEEL_Y, z]}
+          key={index}
+          {...wheel}
           design={design}
           finishIndex={finish}
           caliperIndex={caliper}
         />
-      )))}
+      ))}
     </group>
   );
 }
