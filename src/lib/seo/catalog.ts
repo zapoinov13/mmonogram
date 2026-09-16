@@ -253,18 +253,6 @@ const rep = (region: string, description: string): PageSeo => ({
 });
 
 export const REP_PAGES: Record<string, PageSeo> = {
-  "switzerland-hungary": rep(
-    "Switzerland & Hungary",
-    "The M Monogram representative for Switzerland and Hungary: local viewings, commissions and delivery of cars built by the Dubai atelier."
-  ),
-  germany: rep(
-    "Germany",
-    "The M Monogram representative for Germany: local viewings, commissions and delivery of cars built by the atelier in Dubai."
-  ),
-  "france-monaco": rep(
-    "France & Monaco",
-    "The M Monogram representative for France and Monaco: local viewings, commissions and delivery of cars built by the Dubai atelier."
-  ),
   nigeria: rep(
     "Nigeria",
     "Ugogbuzuo Auto Link Ltd, Enugu — the M Monogram representative for Nigeria and West Africa: GCC spec vehicles, local viewings and delivery from Dubai."
