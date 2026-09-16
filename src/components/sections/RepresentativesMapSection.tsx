@@ -16,9 +16,6 @@ const GEO_URL = "/maps/countries-110m.json";
  * обычного отступа вправо.
  */
 const LABEL: Record<string, { offset: string; anchor: "start" | "end" }> = {
-  "switzerland-hungary": { offset: "translate(-9, -1)", anchor: "end" },
-  germany: { offset: "translate(9, -5)", anchor: "start" },
-  "france-monaco": { offset: "translate(-9, 10)", anchor: "end" },
   nigeria: { offset: "translate(9, -5)", anchor: "start" },
 };
 
