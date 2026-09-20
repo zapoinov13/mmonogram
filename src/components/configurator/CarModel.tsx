@@ -25,7 +25,7 @@ import { BuildConfig } from "./config";
  * (см. CarModel.supportsOpenings), а не подменяет всю машину.
  */
 
-class ModelBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+class ModelBoundary extends Component<{ children: ReactNode; fallback: ReactNode; onError?: (error: Error) => void }, { failed: boolean }> {
   state = { failed: false };
 
   static getDerivedStateFromError() {
@@ -34,6 +34,7 @@ class ModelBoundary extends Component<{ children: ReactNode; fallback: ReactNode
 
   componentDidCatch(error: Error) {
     console.error("Configurator model failed to load:", error.message);
+    this.props.onError?.(error);
   }
 
   render() {
@@ -55,10 +56,12 @@ export default function CarModel({
   config,
   doorsOpen = false,
   onReady,
+  onError,
 }: {
   config: BuildConfig;
   doorsOpen?: boolean;
   onReady?: () => void;
+  onError?: (error: Error) => void;
 }) {
   /* Reveal the error state instead of leaving the intro over the retry action. */
   const broken = (
@@ -78,7 +81,7 @@ export default function CarModel({
   );
 
   return (
-    <ModelBoundary key={config.model} fallback={broken}>
+    <ModelBoundary key={config.model} fallback={onError ? null : broken} onError={onError}>
       <Suspense fallback={<SceneLoader night={config.night} />}>
         <GClassGLTF config={config} interiorVisible={doorsOpen} />
         <ReadySignal onReady={onReady} />

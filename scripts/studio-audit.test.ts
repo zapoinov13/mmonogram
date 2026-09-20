@@ -18,4 +18,7 @@ assert.ok(page.includes('section !== "overview"'), "sharing and screenshots must
 const boundary = readFileSync("src/components/configurator/SceneErrorBoundary.tsx", "utf8");
 assert.ok(boundary.includes("this.props.onError?.()"), "scene failures must dismiss the loading cover");
 assert.ok(page.includes("<SceneErrorBoundary onError={handleSceneReady}>"), "the retry screen must not remain behind StudioIntro");
+const model = readFileSync("src/components/configurator/CarModel.tsx", "utf8");
+assert.ok(model.includes("this.props.onError?.(error)"), "model failures must escape the projected 3D fallback");
+assert.ok(scene.includes("onError={setModelError}") && scene.includes("if (modelError) throw modelError"), "network/decode failures must use the DOM error boundary, independent of camera position");
 console.log("Studio lighting and package defaults are consistent.");

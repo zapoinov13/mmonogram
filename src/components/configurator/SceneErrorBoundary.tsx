@@ -30,11 +30,11 @@ export default class SceneErrorBoundary extends Component<Props, State> {
     if (this.props.fallback) return this.props.fallback;
 
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-4 px-6 text-center bg-premium-black">
+      <div role="alert" className="w-full h-full flex flex-col items-center justify-center gap-4 px-6 text-center bg-premium-black">
         <p className="font-display text-sm uppercase tracking-[0.25em] text-white/70">
           3D Studio failed to load
         </p>
-        <p className="font-body text-xs text-white/40 max-w-sm">
+        <p className="font-body text-xs text-white/40 max-w-sm break-words">
           {this.state.error.message || "Unknown error"}
         </p>
         <button

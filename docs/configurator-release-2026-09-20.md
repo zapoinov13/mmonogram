@@ -30,6 +30,8 @@ Based on the latest main branch, including the newer representatives/SEO edits.
 - Repeated saves do not duplicate a build; changing a finish clears saved status.
 - Stopped the hidden loading-logo animation after readiness. A scene/chunk
   failure dismisses the cover so the error and reload control remain accessible.
+- Model/decode failures propagate out of the 3D scene into the DOM error boundary.
+  The retry action no longer projects outside an interior camera's view.
 
 ## Verification
 
@@ -44,6 +46,11 @@ Based on the latest main branch, including the newer representatives/SEO edits.
   repeated saves leave one saved build, and edited builds lose the saved mark.
 - No browser error logs during the exercised flows. No horizontal document
   overflow at the two mobile widths.
+- Injected a one-shot HTTP 503 for body-studio.glb against the production build.
+  Confirmed a visible error/reload control and a complete cabin after Reload.
+- Production initially returned a model-loading failure on the first visit;
+  reloading recovered. The original transient cause was not identified. All ten
+  model files subsequently returned HTTP 200 and matched local SHA-256 hashes.
 - Original source GLBs are intentionally retained. The asset checker reports
   three unused source files copied into dist; the public loader does not request
   them. They are not included in the measured 22.17 MiB payload.

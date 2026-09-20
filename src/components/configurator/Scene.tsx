@@ -472,6 +472,7 @@ export default function ConfiguratorScene({
 }) {
   const { isMobile, reducedMotion } = useSceneQuality();
   const [carReady, setCarReady] = useState(false);
+  const [modelError, setModelError] = useState<Error | null>(null);
   const handleReady = useCallback(() => {
     setCarReady(true);
     onReady?.();
@@ -488,6 +489,9 @@ export default function ConfiguratorScene({
   const bg = config.night ? "#08090a" : "#111315";
   const enablePostEffects = !isMobile && !reducedMotion && !interior;
   const headlight = getHeadlightAppearance(config.lights);
+
+  // Projected Html can be outside the cabin camera. Use the page's DOM boundary.
+  if (modelError) throw modelError;
 
   return (
     <Canvas
@@ -526,7 +530,7 @@ export default function ConfiguratorScene({
           shadow-camera-top={6}
           shadow-camera-bottom={-6}
         />
-        <CarModel config={config} doorsOpen={interior} onReady={handleReady} />
+        <CarModel config={config} doorsOpen={interior} onReady={handleReady} onError={setModelError} />
 
         {/* Свет салона. Материалы кабины не берут свет окружения вовсе, так
             что кроме рассеянного её освещают только эти два плафона — зато
