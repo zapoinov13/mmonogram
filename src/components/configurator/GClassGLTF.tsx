@@ -6,6 +6,7 @@ import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES, 
 import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_UPHOLSTERY_URL, CAD_STEERING_DETAILS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, assemblyAssets, modelAssetUrl, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import { createInstrumentTexture } from "./instrumentTexture";
 import { createCabinMetalMaterials, createOriginalWheelMaterials } from "./finishMaterials";
+import { createCabinSurfaceMaterials } from "./cabinMaterials";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -146,7 +147,7 @@ function Parts({
     const byRole: Record<PartRole, THREE.Mesh[]> = {
       body: [], wheel: [], wheelBlade: [], wheelAccent: [], tire: [], glass: [], roofGlass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
-      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], steeringAccent: [], steeringMetal: [], steeringMarking: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
+      cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], steeringAccent: [], steeringMetal: [], steeringMarking: [], cabinMetal: [], cabinSpeaker: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
 
     /* Салон разбирается в два прохода: сначала собираем габариты всех
@@ -385,43 +386,7 @@ export default function GClassGLTF({
          глянцевые заодно с кузовом, а не матовые: матовая серая полоса вдоль
          крыши рядом с глянцевым чёрным читалась как отдельная деталь. */
       trim: new THREE.MeshStandardMaterial({ color: "#0d0d0e", metalness: 0.3, roughness: 0.3 }),
-      /* Палитра салона снята с фотографий проекта (g3-iconic-gold-rearseats):
-         чёрная кожа #241f1e, бордо сидений #4a231c, тёмный потолок #0f0c0d.
-
-         Окружение кабина берёт еле-еле. Отрезать его совсем, как было
-         раньше, оказалось перебором: в three.js окружение ничем не
-         загораживается, и на полной силе закрытый салон светился как под
-         открытым небом — бордо уходило в лососевый, а результат зависел от
-         видеокарты. Но при нуле кожа осталась вовсе без отражений и стала
-         похожа на пластилин. Доля в 0.12 даёт коже блеск, а до лососевого
-         на тёмной базе не дотягивает.
-         Clearcoat не возвращаю: лаковый слой зеркалит окружение белым
-         бликом поверх базы, а кожа лаком не покрыта. */
-      cabinLeather: new THREE.MeshStandardMaterial({
-        side: THREE.DoubleSide,
-        color: interior.primary,
-        metalness: 0,
-        roughness: 0.78,
-        envMapIntensity: 0.12,
-      }),
-      cabinAccent: new THREE.MeshStandardMaterial({
-        side: THREE.DoubleSide,
-        color: interior.accent,
-        metalness: 0,
-        // Матовая кожа: при меньшей шероховатости плафоны кладут широкий
-        // белёсый блик, и бордо серело до пыльно-розового
-        roughness: 0.74,
-        envMapIntensity: 0.12,
-      }),
-      /* Накладки передней панели — рояльный лак. Салону нужен хоть один
-         зеркальный материал: рядом с ним кожа читается как кожа. */
-      cabinTrim: new THREE.MeshStandardMaterial({
-        side: THREE.DoubleSide,
-        color: "#0b0b0c",
-        metalness: cadInterior ? 0.15 : 0.5,
-        roughness: cadInterior ? 0.24 : 0.14,
-        envMapIntensity: cadInterior ? 0.2 : 0.4,
-      }),
+      ...createCabinSurfaceMaterials(interior),
       cabinDisplay: new THREE.MeshPhysicalMaterial({
         color: "#050607",
         metalness: 0,
@@ -450,6 +415,9 @@ export default function GClassGLTF({
         metalness: 0, roughness: 0.64, envMapIntensity: 0.07, specularIntensity: 0.25,
       }),
       ...createCabinMetalMaterials(),
+      cabinSpeaker: new THREE.MeshStandardMaterial({
+        side: THREE.DoubleSide, color: "#40372b", metalness: 0.6, roughness: 0.5, envMapIntensity: 0.2,
+      }),
       steeringMarking: new THREE.MeshStandardMaterial({
         color: "#e2dfd6", metalness: 0, roughness: 0.58, envMapIntensity: 0.06,
       }),

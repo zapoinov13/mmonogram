@@ -14,7 +14,7 @@
 /** Файлы лежат в public/models, декодер Draco — в public/draco. */
 export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
-export const CAD_INTERIOR_URL = `${MODEL_BASE}/cabin-structure.glb`;
+export const CAD_INTERIOR_URL = `${MODEL_BASE}/cabin-tailored.glb`;
 export const CAD_UPHOLSTERY_URL = `${MODEL_BASE}/cabin-upholstery.glb`;
 export const CAD_BODY_URL = `${MODEL_BASE}/body-studio.glb`;
 export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
@@ -169,6 +169,7 @@ export type PartRole =
   | "steeringMetal"
   | "steeringMarking"
   | "cabinMetal"   // мелочь салона: динамики, часы, клавиши
+  | "cabinSpeaker"
   | "cabinFloor"   // ковролин
   | "cabinRoof"    // потолок
   | "trim"      // остальной чёрный пластик и мелочь
@@ -368,6 +369,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   cabinAccent: "#e056a0",
   cabinTrim: "#00308f",
   cabinMetal: "#c0c0c0",
+  cabinSpeaker: "#524534",
   cabinFloor: "#155e3f",
   cabinRoof: "#7f8c1a",
   trim: "#6b4f2a",
