@@ -10,6 +10,7 @@ import { anchorCabinCamera } from "./cabinCamera";
 import Showroom from "./Showroom";
 import { BuildConfig, isInteriorFocus, type CameraFocus } from "./config";
 import { getHeadlightAppearance } from "./headlights";
+import { CAD_INTERIOR_URL, CARS, DEFAULT_CAR, carFiles } from "./models";
 
 export type { CameraFocus };
 
@@ -46,6 +47,14 @@ const PRESETS: Record<CameraFocus, { desktop: CameraPreset; mobile: CameraPreset
   exterior: {
     desktop: { azimuth: 78, polar: 80, distance: 7.0, target: [0, 0.85, 0] },
     mobile: { azimuth: 30, polar: 81, distance: 11.0, target: [0, 1.0, 0] },
+  },
+  rear: {
+    desktop: { azimuth: 145, polar: 77, distance: 7.4, target: [-0.3, 0.85, 0] },
+    mobile: { azimuth: 150, polar: 78, distance: 8.2, target: [-0.25, 1.0, 0] },
+  },
+  roof: {
+    desktop: { azimuth: 48, polar: 32, distance: 7.2, target: [0, 1.25, 0] },
+    mobile: { azimuth: 26, polar: 28, distance: 12.6, target: [0, 1.25, 0] },
   },
   wheels: {
     desktop: { azimuth: 52, polar: 83, distance: 3.6, target: [1.45, 0.55, 0.4] },
@@ -197,7 +206,7 @@ function CameraRig({
     const cam = camera as THREE.PerspectiveCamera;
     const toFov = preset.fov ?? (isMobile ? BASE_FOV_MOBILE : BASE_FOV);
 
-    if (reducedMotion) {
+    if (reducedMotion || (!introDone.current && preset.eye)) {
       introDone.current = true;
       flightRef.current = null;
       camera.position.copy(toPos);
@@ -469,7 +478,7 @@ export default function ConfiguratorScene({
   }, [onReady]);
   const safeFocus = PRESETS[focus] ? focus : "default";
   const interior = isInteriorFocus(safeFocus);
-  const cadCabin = useMemo(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("cad") === "1", []);
+  const cadCabin = useMemo(() => carFiles(CARS[config.model] ?? CARS[DEFAULT_CAR]).interior === CAD_INTERIOR_URL, [config.model]);
   const seat = useMemo(() => {
     const eye = PRESETS[safeFocus][isMobile ? "mobile" : "desktop"].eye;
     return eye ? new THREE.Vector3(...eye) : null;

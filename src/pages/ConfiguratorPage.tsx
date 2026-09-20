@@ -4,6 +4,7 @@ import {
   Armchair,
   Camera,
   Car,
+  CarFront,
   Check,
   ClipboardList,
   DoorOpen,
@@ -38,6 +39,7 @@ import {
   RIM_DESIGNS,
   RIM_FINISHES,
   SIGNATURE_BUILDS,
+  applySignatureBuild,
   decodeConfig,
   encodeConfig,
   matchSignatureBuild,
@@ -54,7 +56,7 @@ const ConfiguratorScene = lazy(() => import("@/components/configurator/Scene"));
 type InteriorView = Extract<CameraFocus, "interiorFront" | "interiorDriver" | "interiorRear">;
 
 const FOCUS_VALUES: CameraFocus[] = [
-  "default", "exterior", "wheels", "kit", "carbon", "lights", "env",
+  "default", "exterior", "rear", "roof", "wheels", "kit", "carbon", "lights", "env",
   "interiorFront", "interiorDriver", "interiorRear",
 ];
 
@@ -124,6 +126,13 @@ const INTERIOR_VIEW_ICONS = {
   interiorDriver: Gauge,
   interiorRear: Sofa,
 } as const;
+
+const EXTERIOR_VIEWS = [
+  { focus: "default", label: "Front", icon: CarFront },
+  { focus: "exterior", label: "Side", icon: Car },
+  { focus: "rear", label: "Rear", icon: Car },
+  { focus: "roof", label: "Roof", icon: PanelTop },
+] as const;
 
 const SECTION_FOCUS: Partial<Record<StudioSection, CameraFocus>> = {
   /* Готовый пакет показываем с общего ракурса: меняется вся машина сразу,
@@ -265,7 +274,12 @@ const ConfiguratorPage = () => {
   /* Панель открывается на готовых пакетах, а не на палитре красок: первым
      делом человек должен увидеть то, что ателье продаёт, и уже потом
      править под себя. */
-  const [activeSection, setActiveSection] = useState<StudioSection>("signature");
+  const [activeSection, setActiveSection] = useState<StudioSection>(() => {
+    const view = searchParams.get("v");
+    if (view?.startsWith("interior")) return "interior";
+    if (view === "wheels" || view === "lights" || view === "env") return view;
+    return view && view !== "default" ? "exterior" : "signature";
+  });
   const [tuningOpen, setTuningOpen] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
@@ -333,7 +347,7 @@ const ConfiguratorPage = () => {
 
   const changeFocus = useCallback((next: CameraFocus) => apply(config, next), [apply, config]);
 
-  const set = useCallback((patch: Partial<BuildConfig>) => handleChange({ ...config, ...patch }), [config, handleChange]);
+  const set = useCallback((patch: Partial<BuildConfig>) => handleChange({ ...config, ...patch, saved: false }), [config, handleChange]);
 
   /* Какому фирменному пакету отвечает текущая сборка (или null, если человек
      ушёл в свою). Нужен и разделу Signature, и подписи в списке разделов. */
@@ -348,7 +362,7 @@ const ConfiguratorPage = () => {
   const chooseSection = useCallback(
     (section: StudioSection) => {
       setActiveSection(section);
-      changeFocus(focusForSection(section));
+      if (section !== "overview") changeFocus(focusForSection(section));
     },
     [changeFocus]
   );
@@ -444,8 +458,8 @@ const ConfiguratorPage = () => {
     } catch {
       saved = [];
     }
-    const code = encodeConfig(config);
-    const next = [{ code, savedAt: new Date().toISOString(), price }, ...saved.filter((item) => item.code !== code)].slice(0, 12);
+    const code = encodeConfig({ ...config, saved: false });
+    const next = [{ code, savedAt: new Date().toISOString(), price }, ...saved.filter((item) => encodeConfig({ ...decodeConfig(item.code), saved: false }) !== code)].slice(0, 12);
     try {
       localStorage.setItem("mmonogram-builds", JSON.stringify(next));
       setSavedBuilds(next);
@@ -487,7 +501,7 @@ const ConfiguratorPage = () => {
 
   const loadSavedBuild = useCallback(
     (code: string) => {
-      const next = decodeConfig(code);
+      const next = { ...decodeConfig(code), saved: true };
       setActiveSection("overview");
       apply(next, "default");
     },
@@ -535,7 +549,7 @@ const ConfiguratorPage = () => {
   const overviewRows = [
     { label: t("config.model"), value: car.name },
     { label: t("config.exterior"), value: `${PAINTS[config.paint].name} · ${GRILLE_FINISHES[config.grille].name}` },
-    { label: t("config.rims"), value: RIM_FINISHES[config.rimFinish].name },
+    { label: t("config.rims"), value: `${RIM_DESIGNS[config.rim].name} · ${RIM_FINISHES[config.rimFinish].name}` },
     ...(hasKit ? [{ label: t("config.kit"), value: KIT_PACKAGES[config.kitPackage].name }] : []),
     { label: t("config.carbon"), value: config.carbon ? t("config.carbonOn") : t("config.carbonOff") },
     { label: t("config.lights"), value: config.lights ? t("config.lightsOn") : t("config.lightsOff") },
@@ -561,7 +575,7 @@ const ConfiguratorPage = () => {
         return SIGNATURE_BUILDS.map((build) => ({
           key: `signature-${build.id}`,
           selected: signature?.id === build.id,
-          onClick: () => apply({ ...build.config, saved: config.saved }, "default"),
+          onClick: () => apply(applySignatureBuild(config, build), "default"),
           preview: <PaintChip color={GRILLE_FINISHES[build.config.grille].color} />,
           title: build.name,
           subtitle: build.tagline,
@@ -740,7 +754,7 @@ const ConfiguratorPage = () => {
           tuningOpen ? "-translate-y-[11rem] drawer:translate-y-0 drawer:-translate-x-[11rem] md:-translate-x-[12.5rem]" : "translate-y-0 drawer:translate-x-0"
         )}
       >
-        <SceneErrorBoundary>
+        <SceneErrorBoundary onError={handleSceneReady}>
           <Suspense
             fallback={
               <div className="flex h-full w-full items-center justify-center">
@@ -1077,6 +1091,15 @@ const ConfiguratorPage = () => {
                 </div>
               ) : (
                 <>
+                  {activeSection === "exterior" && (
+                    <div className="tuning-camera-views tuning-exterior-views" aria-label="Exterior camera">
+                      {EXTERIOR_VIEWS.map(({ focus: view, label, icon: Icon }) => (
+                        <button type="button" key={view} aria-pressed={focus === view} onClick={() => changeFocus(view)}>
+                          <Icon aria-hidden="true" /><span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {activeSection === "interior" && (
                     <div className="tuning-camera-views" aria-label="Interior camera">
                       {options.filter(option => option.control === "camera").map(option => (

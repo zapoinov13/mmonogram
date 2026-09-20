@@ -24,6 +24,7 @@
 .tuning-packages .tuning-option { flex-direction: row; align-items: center; padding-right: 36px; min-height: 82px; }
 .tuning-packages .tuning-option-preview { flex-shrink: 0; }
 .tuning-camera-views { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2px; padding: 3px; background: #080809; border-radius: 6px; }
+.tuning-exterior-views { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .tuning-camera-views button { display: flex; min-width: 0; min-height: 58px; padding: 6px 3px; flex-direction: column; justify-content: center; align-items: center; gap: 5px; color: #99999e; border-radius: 4px; }
 .tuning-camera-views svg { width: 18px; height: 18px; }
 .tuning-camera-views span { font-size: 10px; line-height: 13px; overflow-wrap: anywhere; }

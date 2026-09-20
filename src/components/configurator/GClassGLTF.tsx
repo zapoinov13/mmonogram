@@ -2,8 +2,8 @@ import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES } from "./config";
-import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_STEERING_DETAILS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
+import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES, decodeConfig } from "./config";
+import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_UPHOLSTERY_URL, CAD_STEERING_DETAILS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, assemblyAssets, modelAssetUrl, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import { createInstrumentTexture } from "./instrumentTexture";
 import {
   cabinDashAtMax,
@@ -30,10 +30,8 @@ import ForgedWheelSet from "./ForgedWheelSet";
  * нормирует масштаб по длине кузова — и раздаёт материалы, определяя роль
  * каждой части по её месту в габаритах.
  *
- * Кузов обязателен: по нему считается общий трансформ, к которому
- * притягиваются остальные файлы. Обвес, интерьер и руль необязательны —
- * каждый грузится под своей границей ошибок, чтобы отсутствие интерьера не
- * уносило с собой уже загруженный кузов.
+ * Кузов задаёт общий трансформ. Все выбранные части используют одну
+ * границу загрузки: первый кадр показывает целую сборку, а не её замену.
  */
 
 /* Роль debris сюда не входит: такие меши прячутся, а не красятся, и
@@ -133,8 +131,7 @@ function Parts({
   goldSteering?: boolean;
   replaceWheelFaces?: boolean;
 }) {
-  const revision = url === CAD_CONSOLE_URL ? "20260913-console-2" : "20260913-cabin";
-  const { scene } = useGLTF(`${url}?v=${revision}`, DRACO_PATH);
+  const { scene } = useGLTF(modelAssetUrl(url), DRACO_PATH);
 
   const prepared = useMemo(() => {
     const root = scene.clone(true);
@@ -170,11 +167,7 @@ function Parts({
 
       // CAD export has explicit roles; spatial heuristics would misclassify
       // joined assemblies or discard legitimate thin panels as debris.
-      if (url === CAD_INTERIOR_URL && (/^(ita_mi|miko_ob|miko_mi)_/.test(mesh.name) || mesh.name === "ita_ob_cabinDisplay")) {
-        mesh.visible = false;
-        return;
-      }
-      if (url === CAD_INTERIOR_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_WHEELS_URL || url === CAD_STEERING_DETAILS_URL) {
+      if (url === CAD_INTERIOR_URL || url === CAD_UPHOLSTERY_URL || url === CAD_CONSOLE_URL || url === CAD_INSTRUMENTS_URL || url === CAD_WHEELS_URL || url === CAD_STEERING_DETAILS_URL) {
         const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
         const role = source.name as PartRole;
         if (Object.prototype.hasOwnProperty.call(byRole, role) && role !== "debris") {
@@ -275,10 +268,10 @@ export default function GClassGLTF({
   interiorVisible?: boolean;
 }) {
   const car: CarModel = CARS[config.model] ?? CARS[DEFAULT_CAR];
-  /* Лёгкий набор по умолчанию, CAD — по ?hq=1. См. carFiles() в models.ts. */
+  /* Полная рабочая сборка; исходники доступны только в режиме сравнения. */
   const files = useMemo(() => carFiles(car), [car]);
   const cadInterior = files.interior === CAD_INTERIOR_URL;
-  const body = useGLTF(`${files.body}?v=20260913-cabin`, DRACO_PATH);
+  const body = useGLTF(modelAssetUrl(files.body), DRACO_PATH);
   const fit = useMemo(() => computeFit(body.scene.clone(true), car.length), [body.scene, car.length]);
   const [steeringReady, setSteeringReady] = useState(false);
   const reportSteeringReady = useCallback(() => setSteeringReady(true), []);
@@ -568,8 +561,8 @@ export default function GClassGLTF({
         />
       )}
 
-      {showInterior && cadInterior && car.files.interior && (
-        <Parts url={car.files.interior} fit={fit} kind="interior" materials={materials} hideBox={interiorSteeringMask} goldTrim />
+      {showInterior && cadInterior && (
+        <Parts url={CAD_UPHOLSTERY_URL} fit={fit} kind="interior" materials={materials} />
       )}
 
       {showInterior && cadInterior && (
@@ -594,10 +587,12 @@ export default function GClassGLTF({
   );
 }
 
-/* Предзагружаем только машину по умолчанию: остальные — по факту выбора.
-   Раньше цикл шёл по всем CARS и тянул referenсe-модель, которой нет в
-   публичном списке, — лишние 1.9 МБ на каждом заходе. */
+/* Start the selected assembly together, before nested Parts can suspend. */
 {
-  const files = carFiles(CARS[DEFAULT_CAR]);
-  useGLTF.preload(`${files.body}?v=20260913-cabin`, DRACO_PATH);
+  const car = CARS[DEFAULT_CAR];
+  const files = carFiles(car);
+  const initial = decodeConfig(typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("c"));
+  for (const url of assemblyAssets(files, initial.rim === 1)) {
+    useGLTF.preload(modelAssetUrl(url), DRACO_PATH);
+  }
 }

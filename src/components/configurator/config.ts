@@ -140,7 +140,7 @@ export interface BuildConfig {
 
 /** Camera presets tied to config panel sections */
 export type CameraFocus =
-  | "default" | "exterior" | "wheels" | "kit" | "carbon" | "lights" | "env"
+  | "default" | "exterior" | "rear" | "roof" | "wheels" | "kit" | "carbon" | "lights" | "env"
   /* Ракурсы внутри салона */
   | "interiorFront" | "interiorDriver" | "interiorRear";
 
@@ -154,7 +154,7 @@ export const DEFAULT_CONFIG: BuildConfig = {
   model: DEFAULT_CAR,
   paint: 0,
   rim: 1,
-  rimFinish: 0,
+  rimFinish: 2,
   caliper: 0,
   kitPackage: 0,
   kit: true,
@@ -230,6 +230,11 @@ export function matchSignatureBuild(c: BuildConfig): SignatureBuild | null {
     SIGNATURE_BUILDS.find((b) => b.config.grille === c.grille && b.config.rimFinish === c.rimFinish) ??
     null
   );
+}
+
+/** A metal package changes finishes, not the customer's other choices. */
+export function applySignatureBuild(config: BuildConfig, build: SignatureBuild): BuildConfig {
+  return { ...config, grille: build.config.grille, rimFinish: build.config.rimFinish, saved: false };
 }
 
 /* Первый сегмент — версия схемы: старые ссылки не ломаются при добавлении опций */

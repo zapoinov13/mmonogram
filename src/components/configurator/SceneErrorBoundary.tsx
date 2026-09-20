@@ -4,6 +4,7 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onRetry?: () => void;
+  onError?: () => void;
 }
 
 interface State {
@@ -20,6 +21,7 @@ export default class SceneErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error) {
     console.error("Configurator scene error:", error);
+    this.props.onError?.();
   }
 
   render() {

@@ -50,9 +50,10 @@ const totalBytes = [car.files.interior, car.files.steering].filter(Boolean).redu
   sum + readFileSync(new URL("../public" + path, import.meta.url)).length
 ), bytes.length + centerBytes.length + controlsBytes.length + bodyBytes.length +
   readFileSync(new URL("../public" + CAD_GRILLE_KIT_URL, import.meta.url)).length);
-assert.ok(totalBytes < 20 * 1024 * 1024, "complete CAD + custom trim assembly must stay below 20 MiB");
+assert.ok(totalBytes < 20 * 1024 * 1024, "legacy source comparison subset must stay below 20 MiB; studio-assets tests the complete public payload");
 const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
-const roles = new Set(["cabinFloor", "cabinRoof", "cabinLeather", "cabinAccent", "cabinTrim", "cabinMetal", "cabinDisplay"]);
+// The obsolete display is removed; instruments-original.glb supplies the real screens.
+const roles = new Set(["cabinFloor", "cabinRoof", "cabinLeather", "cabinAccent", "cabinTrim", "cabinMetal"]);
 assert.deepEqual(new Set(gltf.materials.map((m: { name: string }) => m.name)), roles);
 assert.ok(gltf.meshes.length <= 160, "merged CAD must stay within the draw-call budget");
 let triangles = 0;

@@ -14,13 +14,14 @@
 /** Файлы лежат в public/models, декодер Draco — в public/draco. */
 export const MODEL_BASE = "/models";
 export const DRACO_PATH = "/draco/";
-export const CAD_INTERIOR_URL = `${MODEL_BASE}/cad-interior-web.glb`;
-export const CAD_BODY_URL = `${MODEL_BASE}/body-clean.glb`;
+export const CAD_INTERIOR_URL = `${MODEL_BASE}/cabin-structure.glb`;
+export const CAD_UPHOLSTERY_URL = `${MODEL_BASE}/cabin-upholstery.glb`;
+export const CAD_BODY_URL = `${MODEL_BASE}/body-studio.glb`;
 export const CAD_GRILLE_KIT_URL = `${MODEL_BASE}/kit-grille-refined.glb`;
 export const CAD_STEERING_CENTER_URL = `${MODEL_BASE}/cad-steering-center.glb`;
 export const CAD_STEERING_CONTROLS_URL = `${MODEL_BASE}/cad-steering-controls.glb`;
 export const CAD_STEERING_DETAILS_URL = `${MODEL_BASE}/steering-details.glb`;
-export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-original.glb`;
+export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-studio.glb`;
 export const CAD_CONSOLE_URL = `${MODEL_BASE}/console-original.glb`;
 export const CAD_INSTRUMENTS_URL = `${MODEL_BASE}/instruments-original.glb`;
 export const CAD_WHEELS_URL = `${MODEL_BASE}/wheels-original.glb`;
@@ -110,13 +111,26 @@ export const CARS: Record<CarId, CarModel> = {
  * Параметр читается один раз при обращении, состояния не заводим: набор
  * не меняется на лету, страница с другим параметром открывается заново.
  */
-export function carFiles(car: CarModel): CarFiles {
-  if (typeof window === "undefined") return car.files;
-  const params = new URLSearchParams(window.location.search);
+export function carFiles(car: CarModel, search = typeof window === "undefined" ? "" : window.location.search): CarFiles {
+  const params = new URLSearchParams(search);
   // Use the complete CAD assembly for normal navigation, including links without cad=1.
   if (!params.has("hq") && params.get("cad") !== "0") return { ...car.files, body: CAD_BODY_URL, kit: CAD_GRILLE_KIT_URL, interior: CAD_INTERIOR_URL };
   const hq = params.has("hq");
   return hq && car.filesHq ? car.filesHq : car.files;
+}
+
+/** Shared by the loader and release budget checks. No hidden second assembly. */
+export function assemblyAssets(files: CarFiles, originalWheels: boolean): string[] {
+  const assets = [files.body, files.kit, files.interior, files.steering];
+  if (files.interior === CAD_INTERIOR_URL) {
+    assets.push(CAD_UPHOLSTERY_URL, CAD_DASHBOARD_URL, CAD_CONSOLE_URL, CAD_INSTRUMENTS_URL, CAD_STEERING_DETAILS_URL);
+    if (originalWheels) assets.push(CAD_WHEELS_URL);
+  }
+  return [...new Set(assets.filter((url): url is string => !!url))];
+}
+
+export function modelAssetUrl(url: string): string {
+  return `${url}?v=20260920-studio`;
 }
 
 export const CAR_IDS = Object.keys(CARS) as CarId[];

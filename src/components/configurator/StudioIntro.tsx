@@ -31,7 +31,7 @@ const StudioIntro = memo(({ done }: { done: boolean }) => (
       loading="eager"
       decoding="sync"
       fetchpriority="high"
-      className="h-auto w-64 max-w-[78vw] object-contain opacity-95 animate-logo-pulse will-change-[opacity,transform] sm:w-80 md:w-96"
+      className={`h-auto w-64 max-w-[78vw] object-contain opacity-95 sm:w-80 md:w-96 ${done ? "" : "animate-logo-pulse will-change-[opacity,transform]"}`}
     />
     {/* Тот же девиз, что и на входе в сайт: заставка студии — второй экран,
         где посетитель задерживается, и марка должна звучать одинаково. */}

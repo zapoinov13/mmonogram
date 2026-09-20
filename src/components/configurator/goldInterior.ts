@@ -5,6 +5,15 @@ const blackInserts = new Set([
 ]);
 const cognacShells = new Set(["014", "016", "017", "018", "020", "026", "033", "042", "043", "051", "053", "064", "072", "074", "110", "111"]);
 
+export function isReplacedCadInteriorPart(name: string): boolean {
+  return /^(ita_mi|miko_ob|miko_mi)_/.test(name) || name === "ita_ob_cabinDisplay";
+}
+
+export function goldUpholsteryRole(name: string) {
+  const dashboard = /^(?:Куб\.?03[24]|Плоскость\.?(?:021|078|046|047|073)|чсы(?:\.?00[123])?)$/.test(name);
+  return dashboard ? undefined : goldCustomRole(name);
+}
+
 export function goldSteeringRole(name: string): "steeringBlack" | "steeringAccent" | "cabinTrim" | undefined {
   if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?029$/.test(name)) return "steeringBlack";
   if (/^\u041f\u043b\u043e\u0441\u043a\u043e\u0441\u0442\u044c\.?031$/.test(name)) return "steeringAccent";

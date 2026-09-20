@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { RoundedBox, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { CALIPER_FINISHES, RIM_FINISHES } from "./config";
-import { DRACO_PATH } from "./models";
+import { DRACO_PATH, modelAssetUrl } from "./models";
 import type { Fit } from "./fitModel";
 import { measureWheelFitments, WHEEL_LIP } from "./wheelFitment";
 
@@ -184,7 +184,7 @@ export default function ForgedWheelSet({
   kitUrl: string;
   fit: Fit;
 }) {
-  const { scene } = useGLTF(`${kitUrl}?v=20260913-cabin`, DRACO_PATH);
+  const { scene } = useGLTF(modelAssetUrl(kitUrl), DRACO_PATH);
   const wheels = useMemo(() => measureWheelFitments(scene, fit), [scene, fit]);
   return (
     <group>
