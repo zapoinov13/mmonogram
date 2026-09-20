@@ -71,11 +71,41 @@ geometry reduction and a larger download. The original wheel GLB is unchanged.
 ## Remaining limitations
 
 This is not a claim of photographic one-to-one reconstruction. Original CAD
-surface normals, joined black wheel geometry, upholstery texture fidelity and
-some reflective trim still differ from the Gold Package photographs. Accurate
-gold edging of the original turbine face needs separately authored material
-regions, not a blanket gold material. Door/hood opening is not rigged, and a
-separate stock assembly is not offered by the current public controls.
+surface normals, upholstery texture fidelity and some reflective trim still
+differ from the Gold Package photographs. Door/hood opening is not rigged,
+and a separate stock assembly is not offered by the current public controls.
+
+## Follow-up: original wheel finish and cabin metal
+
+- Rechecked main at cef7d4e, successful Vercel deployment, exact domain renderer
+  and config hashes, and all ten GLB SHA-256 hashes before starting this pass.
+- The original wheel's six CAD parts are retained. Only the two turbine-pair
+  meshes are partitioned into black blade flanks and forward-facing metal
+  bevels outside the hub. Metal covers 7.2-7.4% of turbine surface area; mirrored
+  sides agree within 3%. No replacement wheel shape, tire offset or decimation.
+- Added wheels-finished.glb; wheels-original.glb remains the reproducible source.
+  Complete public GLB payload is now 22.21 MiB (still below the 23 MiB budget).
+- Shared the lacquer/metal materials between the scene and option renderer.
+  Gave blade flanks a separate restrained specular response. Regenerated only the
+  original wheel's five finish previews. Versioned preview URLs avoid old cache.
+- Cabin metal now stays champagne like the steering detailing, regardless of
+  the selected exterior grille/Signature package. Leather choices still work.
+- Regression tests cover edge area, left/right consistency, preserved geometry
+  and bounds, independent material finishes and nonblank preview pixels.
+- Full verification passes 21 suites, lint, types, production build and 26-page
+  SEO validation. Browser checks cover desktop 1280x720, mobile 390x844, actual
+  finish changes, matching thumbnails and unchanged cabin metals after selecting
+  Black Package. The mobile document has no horizontal overflow.
+
+Regenerate the finished wheel with:
+
+```sh
+node scripts/finish-original-wheels.mjs /absolute/path/to/tools/package.json
+```
+
+The material split is specific to the named original CAD turbine meshes and
+must be visually reviewed if that source is replaced. Narrow bevel selection
+uses existing surface normals; this does not repair all CAD shading artifacts.
 
 ## Release and rollback
 

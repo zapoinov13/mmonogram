@@ -24,7 +24,7 @@ export const CAD_STEERING_DETAILS_URL = `${MODEL_BASE}/steering-details.glb`;
 export const CAD_DASHBOARD_URL = `${MODEL_BASE}/dashboard-studio.glb`;
 export const CAD_CONSOLE_URL = `${MODEL_BASE}/console-original.glb`;
 export const CAD_INSTRUMENTS_URL = `${MODEL_BASE}/instruments-original.glb`;
-export const CAD_WHEELS_URL = `${MODEL_BASE}/wheels-original.glb`;
+export const CAD_WHEELS_URL = `${MODEL_BASE}/wheels-finished.glb`;
 
 /** The cleaned body and custom kit contain coincident outer grille frames.
  * Keep the body copy until the replacement is loaded. GLTFLoader sanitizes names. */
@@ -145,6 +145,7 @@ export const TARGET_LENGTH = CARS[DEFAULT_CAR].length;
 export type PartRole =
   | "body"      // кузовные панели — красятся выбранной краской
   | "wheel"       // поле диска — глянцевый чёрный, как на проекте
+  | "wheelBlade"  // чёрные боковые грани центральной турбины
   | "wheelAccent" // спицы и турбина — красятся выбранной отделкой
   | "tire"      // покрышки
   | "glass"     // остекление
@@ -353,6 +354,7 @@ export const ROLE_DEBUG_COLORS: Record<PartRole, string> = {
   steeringBlack: "#181818",
   steeringAccent: "#50251b",
   steeringMetal: "#d5bc87",
+  wheelBlade: "#713bef",
   steeringMarking: "#e0e0dc",
   tire: "#444444",
   glass: "#25d0c0",

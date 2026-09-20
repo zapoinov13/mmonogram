@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { BuildConfig, GRILLE_FINISHES, INTERIOR_FINISHES, PAINTS, RIM_FINISHES, decodeConfig } from "./config";
 import { CAD_CONSOLE_URL, CAD_DASHBOARD_URL, CAD_INSTRUMENTS_URL, CAD_INTERIOR_URL, CAD_UPHOLSTERY_URL, CAD_STEERING_DETAILS_URL, CARS, DEFAULT_CAR, DRACO_PATH, MESH_RULES, ROLE_DEBUG_COLORS, assemblyAssets, modelAssetUrl, carFiles, type CarModel, type FileRole, type PartRole } from "./models";
 import { createInstrumentTexture } from "./instrumentTexture";
+import { createCabinMetalMaterials, createOriginalWheelMaterials } from "./finishMaterials";
 import {
   cabinDashAtMax,
   classifyCabin,
@@ -143,7 +144,7 @@ function Parts({
     root.updateMatrixWorld(true);
 
     const byRole: Record<PartRole, THREE.Mesh[]> = {
-      body: [], wheel: [], wheelAccent: [], tire: [], glass: [], roofGlass: [], taillight: [],
+      body: [], wheel: [], wheelBlade: [], wheelAccent: [], tire: [], glass: [], roofGlass: [], taillight: [],
       light: [], brightwork: [], grilleMetal: [], carbon: [], cabinLeather: [], cabinAccent: [],
       cabinTrim: [], cabinDisplay: [], cabinClock: [], cabinClockGlass: [], cabinInstruments: [], cabinInfotainment: [], cabinScreenGlass: [], steeringBlack: [], steeringAccent: [], steeringMetal: [], steeringMarking: [], cabinMetal: [], cabinFloor: [], cabinRoof: [], trim: [], debris: [],
     };
@@ -310,20 +311,7 @@ export default function GClassGLTF({
         clearcoatRoughness: 0.18,
         envMapIntensity: 0.7,
       }),
-      // Поле диска у G63 Iconic глянцево-чёрное, отделкой красятся спицы
-      wheel: new THREE.MeshPhysicalMaterial({
-        color: "#0a0a0b",
-        metalness: 0.6,
-        roughness: 0.3,
-        envMapIntensity: 0.4,
-        clearcoat: 0.3,
-        clearcoatRoughness: 0.2,
-      }),
-      wheelAccent: new THREE.MeshStandardMaterial({
-        color: finish.color,
-        metalness: finish.metalness,
-        roughness: finish.roughness,
-      }),
+      ...createOriginalWheelMaterials(finish),
       tire: new THREE.MeshStandardMaterial({ color: cadInterior ? "#111314" : "#2a2d31", metalness: 0, roughness: 0.9 }),
       glass: new THREE.MeshPhysicalMaterial({
         color: cadInterior ? "#30383a" : "#c6d0d2",
@@ -461,21 +449,9 @@ export default function GClassGLTF({
         color: new THREE.Color(interior.accent).multiplyScalar(0.48),
         metalness: 0, roughness: 0.64, envMapIntensity: 0.07, specularIntensity: 0.25,
       }),
-      // Gold Package cabin detailing is independent of the exterior grille.
-      steeringMetal: new THREE.MeshStandardMaterial({
-        color: "#cfb77e", metalness: 0.85, roughness: 0.28, envMapIntensity: 0.5,
-      }),
+      ...createCabinMetalMaterials(),
       steeringMarking: new THREE.MeshStandardMaterial({
         color: "#e2dfd6", metalness: 0, roughness: 0.58, envMapIntensity: 0.06,
-      }),
-      /* Сетки динамиков, часы, клавиши и дефлекторы — в отделку решётки,
-         но сатиновую: полированное золото вблизи выбивается в белое. */
-      cabinMetal: new THREE.MeshStandardMaterial({
-        side: THREE.DoubleSide,
-        color: grille.color,
-        metalness: 0.82,
-        roughness: Math.max(grille.roughness, 0.48),
-        envMapIntensity: 0.3,
       }),
       cabinFloor: new THREE.MeshStandardMaterial({ color: "#0e0c0c", metalness: 0, roughness: 0.96, envMapIntensity: 0.05 }),
       cabinRoof: new THREE.MeshStandardMaterial({ color: "#141312", metalness: 0, roughness: 0.9, envMapIntensity: 0.05 }),

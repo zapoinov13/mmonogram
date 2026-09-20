@@ -6,11 +6,13 @@ import * as THREE from "three";
 import { ForgedWheel } from "../src/components/configurator/ForgedWheelSet";
 import { RIM_DESIGNS, RIM_FINISHES } from "../src/components/configurator/config";
 import { CAD_WHEELS_URL } from "../src/components/configurator/models";
+import { createOriginalWheelMaterials } from "../src/components/configurator/finishMaterials";
 
 function OriginalWheel({ finishIndex }: { finishIndex: number }) {
   const { scene } = useGLTF(CAD_WHEELS_URL, "/draco/");
   const wheel = useMemo(() => {
     const group = new THREE.Group();
+    const materials = createOriginalWheelMaterials(RIM_FINISHES[finishIndex]);
     scene.updateMatrixWorld(true);
     scene.traverse((node) => {
       if (!(node instanceof THREE.Mesh) || !node.name.startsWith("3F_")) return;
@@ -27,10 +29,8 @@ function OriginalWheel({ finishIndex }: { finishIndex: number }) {
       // Discard unreferenced vertices so Center measures the selected wheel only.
       const isolated = geometry.toNonIndexed();
       geometry.dispose();
-      const finish = RIM_FINISHES[finishIndex];
-      const material = (node.material as THREE.Material).name === "wheelAccent"
-        ? new THREE.MeshStandardMaterial({ color: finish.color, metalness: finish.metalness, roughness: finish.roughness })
-        : new THREE.MeshPhysicalMaterial({ color: "#0a0a0b", metalness: 0.6, roughness: 0.3, envMapIntensity: 0.4, clearcoat: 0.3, clearcoatRoughness: 0.2 });
+      const role = (node.material as THREE.Material).name;
+      const material = role === "wheelAccent" ? materials.wheelAccent : role === "wheelBlade" ? materials.wheelBlade : materials.wheel;
       group.add(new THREE.Mesh(isolated, material));
     });
     group.rotation.y = Math.PI / 2;
@@ -69,10 +69,14 @@ function Capture({ design, finish, onDone }: { design: number; finish: number; o
 function PreviewRenderer() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
-  const design = Math.floor(Math.min(step, 24) / 5);
-  const finish = Math.min(step, 24) % 5;
+  const requestedDesign = new URLSearchParams(window.location.search).get("design");
+  const designs = RIM_DESIGNS.map((_, index) => index).filter(index => !requestedDesign || RIM_DESIGNS[index].id === requestedDesign);
+  const total = designs.length * RIM_FINISHES.length;
+  const active = Math.min(step, Math.max(0, total - 1));
+  const design = designs[Math.floor(active / RIM_FINISHES.length)] ?? 0;
+  const finish = active % RIM_FINISHES.length;
   return <>
-    <p>{error || (step === 25 ? "Done: 25 wheel previews" : `${RIM_DESIGNS[design].name} / ${RIM_FINISHES[finish].name}`)}</p>
+    <p>{error || (step === total ? `Done: ${total} wheel previews` : `${RIM_DESIGNS[design].name} / ${RIM_FINISHES[finish].name}`)}</p>
     <div style={{ width: 384, height: 384 }}>
       <Canvas dpr={1} camera={{ position: [0.12, 0.06, -1.7], fov: 29 }} gl={{ preserveDrawingBuffer: true, antialias: true }}>
         <color attach="background" args={["#161618"]} />
@@ -88,7 +92,7 @@ function PreviewRenderer() {
           <Center key={`wheel-${step}`}>
             {design === 1 ? <OriginalWheel finishIndex={finish} /> : <ForgedWheel position={[0, 0, 0]} design={design} finishIndex={finish} caliperIndex={1} />}
           </Center>
-          {step < 25 && !error && <Capture key={`capture-${step}`} design={design} finish={finish} onDone={(failure) => failure ? setError(failure) : setStep(step + 1)} />}
+          {step < total && !error && <Capture key={`capture-${step}`} design={design} finish={finish} onDone={(failure) => failure ? setError(failure) : setStep(step + 1)} />}
         </Suspense>
       </Canvas>
     </div>

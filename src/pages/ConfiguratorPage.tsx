@@ -1048,7 +1048,7 @@ const ConfiguratorPage = () => {
                           onClick={() => set({ rim: index })}
                         >
                           <img
-                            src={`/images/wheels/${design.id}-${RIM_FINISHES[config.rimFinish].id}.webp`}
+                            src={`/images/wheels/${design.id}-${RIM_FINISHES[config.rimFinish].id}.webp?v=20260920-finish`}
                             alt=""
                             width={384}
                             height={384}
