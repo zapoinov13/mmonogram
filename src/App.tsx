@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import logoMmonogram from "@/assets/logo-mmonogram.webp";
 import ScrollToTop from "@/components/ScrollToTop";
+import { CONFIGURATOR_ENABLED } from "@/lib/features";
 
 // Premium branded loading fallback — large softly pulsing M-Monogram logo
 const PageLoader = () => (
@@ -69,7 +70,9 @@ const App = () => (
                 <Route path="/projects/:id" element={<ProjectDetailPage />} />
                 <Route path="/commission" element={<ModificationsPage />} />
                 <Route path="/modifications" element={<ModificationsPage />} />
-                <Route path="/configurator" element={<ConfiguratorPage />} />
+                {/* Скрытый раздел не должен оставаться доступным по прямому
+                    адресу: без маршрута /configurator отдаёт страницу 404. */}
+                {CONFIGURATOR_ENABLED && <Route path="/configurator" element={<ConfiguratorPage />} />}
                 <Route path="/verify" element={<VerifyPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/booking" element={<BookingPage />} />

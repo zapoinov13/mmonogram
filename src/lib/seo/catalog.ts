@@ -15,6 +15,7 @@
  * загружает конфиг сборки, где ни того ни другого нет.
  */
 
+import { CONFIGURATOR_ENABLED } from "../features.ts";
 import { BRAND, COACHBUILD, CRAFT, PLACE, merge } from "./keywords.ts";
 
 export type ChangeFreq = "daily" | "weekly" | "monthly" | "yearly";
@@ -261,6 +262,18 @@ export const REP_PAGES: Record<string, PageSeo> = {
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Адреса скрытых разделов. Их SEO остаётся в справочнике — чтобы вернуть
+ * раздел, достаточно поменять переключатель, — но сайт ведёт себя так,
+ * будто страницы нет: её нет ни в карте сайта, ни в поиске по пути.
+ *
+ * Одного noindex здесь мало. SEOHead берёт заголовок из справочника по
+ * адресу, поэтому страница 404 по скрытому адресу представлялась бы
+ * конфигуратором: свой title, description, og:title и canonical. Посетитель
+ * видел бы «страница не найдена», а вкладка и соцсети — «3D Configurator».
+ */
+const HIDDEN_PATHS = new Set(CONFIGURATOR_ENABLED ? [] : ["/configurator"]);
+
 /** Все индексируемые адреса сайта с их SEO — в порядке карты сайта. */
 export function allPages(): Array<{ path: string; seo: PageSeo }> {
   return [
@@ -268,12 +281,13 @@ export function allPages(): Array<{ path: string; seo: PageSeo }> {
     ...Object.entries(PROJECT_PAGES).map(([slug, seo]) => ({ path: `/projects/${slug}`, seo })),
     ...Object.entries(PRESS_PAGES).map(([slug, seo]) => ({ path: `/press/${slug}`, seo })),
     ...Object.entries(REP_PAGES).map(([slug, seo]) => ({ path: `/representatives/${slug}`, seo })),
-  ].filter((p) => !p.seo.noindex);
+  ].filter((p) => !p.seo.noindex && !HIDDEN_PATHS.has(p.path));
 }
 
 /** SEO конкретного адреса; для неизвестных путей — null. */
 export function seoForPath(path: string): PageSeo | null {
   const clean = path.replace(/\/+$/, "") || "/";
+  if (HIDDEN_PATHS.has(clean)) return null;
   if (STATIC_PAGES[clean]) return STATIC_PAGES[clean];
   const project = clean.match(/^\/projects\/(.+)$/);
   if (project) return PROJECT_PAGES[project[1]] ?? null;
