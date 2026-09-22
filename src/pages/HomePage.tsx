@@ -7,6 +7,7 @@ import MissionStatement from "@/components/MissionStatement";
 import BrandStrip from "@/components/BrandStrip";
 import VinBanner from "@/components/VinBanner";
 import Configurator3DBanner from "@/components/Configurator3DBanner";
+import { CONFIGURATOR_ENABLED } from "@/lib/features";
 import NextSectionCTA from "@/components/NextSectionCTA";
 import SEOHead from "@/components/SEOHead";
 import LazyOnVisible from "@/components/LazyOnVisible";
@@ -162,7 +163,7 @@ const HomePage = () => {
             nextLabel={t("homeNextCta.next")}
             onClick={() => handleSetCurrentView("brand")}
           />
-          <Configurator3DBanner />
+          {CONFIGURATOR_ENABLED && <Configurator3DBanner />}
           <VinBanner />
           {/* Пресса больше не в меню: вход к ней — этот блок в самом низу
               главной, перед подвалом. */}
